@@ -232,17 +232,14 @@
                         </defs>
                         <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="#FFFFFF" />
                         <g clip-path="url(#headerShieldClip)">
-                            <!-- 3-arc orange warning signal -->
                             <path d="M80 84 A28 28 0 0 1 120 84" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
                             <path d="M68 72 A44 44 0 0 1 132 72" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
                             <path d="M56 60 A60 60 0 0 1 144 60" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
-                            <!-- Purple Trường Tiền truss bridge -->
                             <path d="M22 122 Q100 84 178 122" fill="none" stroke="#4A148C" stroke-width="7"/>
                             <line x1="22" y1="129" x2="178" y2="129" stroke="#4A148C" stroke-width="8"/>
                             <path d="M36 129 L45 113 L55 129 L65 108 L76 129 L88 104 L100 129 L112 104 L124 129 L135 108 L145 129 L155 113 L164 129" fill="none" stroke="#4A148C" stroke-width="4.5" stroke-linejoin="round"/>
                             <path d="M50 129 L47 149 H63 L60 129 Z" fill="#4A148C"/>
                             <path d="M140 129 L137 149 H153 L150 129 Z" fill="#4A148C"/>
-                            <!-- Teal Perfume River waves -->
                             <path d="M18 143 Q45 136 72 144 T128 144 T182 142 V215 H18 Z" fill="#0E7490"/>
                             <path d="M18 157 Q48 150 78 158 T138 158 T182 156 V215 H18 Z" fill="#14B8A6" opacity="0.55"/>
                         </g>
@@ -283,17 +280,16 @@
 
                 <!-- 1. HERO STATUS CARD -->
                 <div id="heroStatusCard" class="sonalog-card p-4 space-y-3 border-t-[5px]" style="border-top-color: #16A34A;">
-                    <!-- Hàng định danh chủ hộ + huy hiệu loại nhà + tốc độ nước lên -->
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0 space-y-0.5">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span id="heroOwnerName" class="text-sm font-extrabold text-slate-900 truncate">Hộ Trương Za Za</span>
+                                <span id="heroOwnerName" class="text-sm font-extrabold text-slate-900 truncate">Hộ Nguyễn Văn Minh</span>
                                 <span id="heroHouseTypePill" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E]">Nhà 2 tầng</span>
                                 <span id="heroSpeedTag" class="px-2 py-0.5 rounded-full text-[10px] font-mono-num font-extrabold bg-slate-100 text-slate-700">+0 cm/h</span>
                             </div>
                             <div class="flex items-center gap-1 text-[11px] text-slate-500 truncate">
                                 <i data-lucide="map-pin" class="w-3 h-3 text-[#1B4D3E] flex-shrink-0"></i>
-                                <span id="heroAddress" class="truncate">5/21 Nguyễn Bỉnh Khiêm - Phú Xuân, TP. Huế</span>
+                                <span id="heroAddress" class="truncate">Đường Nguyễn Huệ - Đống Đa, TP. Huế</span>
                             </div>
                         </div>
                         <button onclick="switchTab('settings')" class="px-2.5 py-1.5 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] text-[11px] font-extrabold flex-shrink-0 transition active:scale-95">
@@ -301,7 +297,6 @@
                         </button>
                     </div>
 
-                    <!-- Khung cảnh báo màu cỡ lớn + khuyến nghị trực diện -->
                     <div id="heroAlertBox" class="p-3.5 rounded-2xl border bg-emerald-50/90 border-emerald-200 space-y-1.5">
                         <div class="flex items-center justify-between gap-2">
                             <span id="heroStatusBadge" class="px-3 py-1 rounded-xl text-white text-xs sm:text-[13px] font-black tracking-wide uppercase shadow-2xs" style="background-color: #16A34A;">
@@ -319,7 +314,6 @@
                         </div>
                     </div>
 
-                    <!-- 3 Chỉ số cốt lõi -->
                     <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="p-2.5 rounded-2xl bg-[#F4F7F6] border border-slate-200/70">
                             <div id="heroStationLabel" class="text-[10px] font-extrabold text-slate-500 uppercase truncate">Trạm Kim Long</div>
@@ -340,7 +334,6 @@
                         </div>
                     </div>
 
-                    <!-- 4 Nút hành động khẩn cấp một chạm -->
                     <div class="grid grid-cols-4 gap-1.5 pt-0.5">
                         <button onclick="triggerEmergencyAlert(false)" class="py-2 px-1 rounded-2xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] flex flex-col items-center justify-center gap-1 transition active:scale-95">
                             <i data-lucide="siren" class="w-4 h-4"></i>
@@ -390,11 +383,9 @@
                                 </clipPath>
                             </defs>
 
-                            <!-- Nền trời & thước đo cao độ 0m -> 6m -->
                             <rect x="0" y="0" width="380" height="218" rx="12" fill="url(#skyGrad)"/>
                             <line x1="30" y1="18" x2="30" y2="202" stroke="#94A3B8" stroke-width="1.5"/>
 
-                            <!-- Vạch chia thước 6m -> 0m -->
                             <text x="24" y="24" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">6m</text>
                             <text x="24" y="54" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">5m</text>
                             <text x="24" y="84" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">4m</text>
@@ -403,46 +394,35 @@
                             <text x="24" y="174" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">1m</text>
                             <text x="24" y="203" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">0m</text>
 
-                            <!-- Đường ngoài & Cổng -->
                             <rect x="34" y="174" width="44" height="30" fill="#CBD5E1"/>
                             <text x="56" y="193" font-size="7.5" font-weight="800" fill="#475569" text-anchor="middle">Đường</text>
                             <rect x="76" y="128" width="5" height="46" fill="#64748B" rx="1"/>
 
-                            <!-- Sân trước (y=158) & Nền móng nhà (y=132) -->
                             <rect x="81" y="158" width="93" height="46" fill="#E2E8F0"/>
                             <rect x="174" y="132" width="194" height="72" fill="#CBD5E1"/>
 
-                            <!-- Bậc tam cấp -->
                             <rect x="166" y="132" width="8" height="26" fill="#94A3B8"/>
                             <rect x="158" y="141" width="8" height="17" fill="#94A3B8"/>
                             <rect x="150" y="150" width="8" height="8" fill="#94A3B8"/>
 
-                            <!-- ================================================= -->
-                            <!-- MÔ HÌNH 1: NHÀ 1 TẦNG (TẦNG TRỆT - MÁI NGÓI ĐỎ)   -->
-                            <!-- ================================================= -->
+                            <!-- MÔ HÌNH 1: NHÀ 1 TẦNG (TẦNG TRỆT - MÁI NGÓI ĐỎ) -->
                             <g id="svgModel1Floor" class="hidden">
-                                <!-- Banner cảnh báo trên mái -->
                                 <rect x="168" y="16" width="202" height="17" rx="5" fill="#FEF3C7" stroke="#DC2626" stroke-width="1.2"/>
                                 <text x="269" y="27.5" font-size="7.4" font-weight="900" fill="#B91C1C" text-anchor="middle">NHÀ 1 TẦNG • KHÔNG CÓ TẦNG TRÊN TRÚ ẨN</text>
 
-                                <!-- Mái ngói đỏ terracotta (#B91C1C) -->
                                 <polygon points="162,76 271,38 378,76" fill="#B91C1C"/>
                                 <line x1="186" y1="67" x2="356" y2="67" stroke="#FCA5A5" stroke-width="1" stroke-dasharray="6 4" opacity="0.7"/>
                                 <line x1="212" y1="57" x2="330" y2="57" stroke="#FCA5A5" stroke-width="1" stroke-dasharray="6 4" opacity="0.7"/>
 
-                                <!-- Thân nhà 1 tầng duy nhất -->
                                 <rect x="174" y="76" width="192" height="56" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-                                <!-- Cửa chính & cửa sổ -->
                                 <rect x="184" y="96" width="20" height="36" rx="1.5" fill="#FEF3C7" stroke="#D97706" stroke-width="1.2"/>
                                 <rect x="218" y="94" width="26" height="18" rx="2" fill="#EBF3F0" stroke="#1B4D3E" stroke-width="1.2"/>
                                 <line x1="231" y1="94" x2="231" y2="112" stroke="#1B4D3E" stroke-width="1"/>
-                                <!-- Tủ lạnh & Đồ đạc -->
                                 <rect x="262" y="99" width="16" height="33" rx="1.5" fill="#E2E8F0" stroke="#475569" stroke-width="1.1"/>
                                 <rect x="288" y="114" width="24" height="18" rx="1.5" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.1"/>
                                 <text x="338" y="108" font-size="7.5" font-weight="800" fill="#B91C1C" text-anchor="middle">TẦNG TRỆT</text>
                                 <text x="338" y="119" font-size="6.8" font-weight="700" fill="#64748B" text-anchor="middle">(1 tầng)</text>
 
-                                <!-- Mũi tên sơ tán sớm (hiện khi nước >= 1.80m / BĐ II / gần sân) -->
                                 <g id="svg1FloorEvacArrow" class="hidden">
                                     <g class="evac-arrow-anim">
                                         <rect x="40" y="90" width="132" height="18" rx="5" fill="#DC2626"/>
@@ -453,49 +433,37 @@
                                 </g>
                             </g>
 
-                            <!-- ================================================= -->
-                            <!-- MÔ HÌNH 2: NHÀ 2 TẦNG (CÓ TẦNG TRÊN KIÊN CỐ)      -->
-                            <!-- ================================================= -->
+                            <!-- MÔ HÌNH 2: NHÀ 2 TẦNG (CÓ TẦNG TRÊN KIÊN CỐ) -->
                             <g id="svgModel2Floor">
-                                <!-- Mái nhà 2 tầng màu xanh rừng thông (#1B4D3E) -->
                                 <polygon points="164,46 271,14 376,46" fill="#1B4D3E"/>
-                                <!-- Khung nhà 2 tầng -->
                                 <rect x="174" y="46" width="192" height="86" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-                                <!-- Tầng 2 sáng đèn an toàn -->
                                 <rect x="175" y="47" width="190" height="41" fill="#ECFDF5"/>
                                 <circle cx="270" cy="53" r="3" fill="#F59E0B"/>
                                 <line x1="174" y1="89" x2="366" y2="89" stroke="#64748B" stroke-width="1.8"/>
                                 <text x="270" y="65" font-size="7.6" font-weight="900" fill="#15803D" text-anchor="middle">TẦNG 2 • KHU VỰC TRÚ ẨN AN TOÀN</text>
-                                <!-- Cửa sổ tầng 2 & giường đồ -->
                                 <rect x="186" y="72" width="28" height="15" rx="2" fill="#BBF7D0" stroke="#16A34A" stroke-width="1.1"/>
                                 <rect x="224" y="70" width="22" height="17" rx="2" fill="#FEF3C7" stroke="#D97706" stroke-width="1.1"/>
-                                <!-- Cầu thang bộ nội bộ -->
                                 <path d="M326 132 L352 89" stroke="#64748B" stroke-width="3.2" stroke-linecap="round"/>
                                 <path d="M332 132 L358 89" stroke="#94A3B8" stroke-width="1.8" stroke-dasharray="3 3"/>
-                                <!-- Tầng 1: cửa chính & cửa sổ -->
                                 <rect x="184" y="99" width="18" height="33" rx="1.5" fill="#FEF3C7" stroke="#D97706" stroke-width="1.2"/>
                                 <rect x="214" y="98" width="24" height="16" rx="2" fill="#EBF3F0" stroke="#1B4D3E" stroke-width="1.1"/>
                                 <rect x="252" y="102" width="15" height="30" rx="1.5" fill="#E2E8F0" stroke="#475569" stroke-width="1.1"/>
                                 <rect x="276" y="114" width="22" height="18" rx="1.5" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.1"/>
                             </g>
 
-                            <!-- Đường gióng Mốc nền nhà (y=132) -->
                             <line x1="34" y1="132" x2="372" y2="132" stroke="#DC2626" stroke-width="1.4" stroke-dasharray="4 3"/>
                             <rect x="234" y="135" width="132" height="14" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.8"/>
                             <text id="svgFloorLabel" x="300" y="144.5" font-size="8" font-weight="800" fill="#DC2626" text-anchor="middle">Nền nhà: 4.34m</text>
 
-                            <!-- Đường gióng Mốc vào sân (y=158) -->
                             <line x1="34" y1="158" x2="174" y2="158" stroke="#EA580C" stroke-width="1.4" stroke-dasharray="4 3"/>
                             <rect x="82" y="161" width="88" height="13" rx="4" fill="#FFF7ED"/>
                             <text id="svgYardLabel" x="126" y="170" font-size="7.8" font-weight="800" fill="#C2410C" text-anchor="middle">Mặt sân: 3.50m</text>
 
-                            <!-- Khối nước dâng theo thời gian thực (0.00m -> 6.00m) -->
                             <g clip-path="url(#waterClipBox)">
                                 <rect id="svgWaterFill" x="34" y="200" width="336" height="4" fill="#16A34A" fill-opacity="0.34"/>
                                 <line id="svgWaterSurface" x1="34" y1="200" x2="370" y2="200" stroke="#16A34A" stroke-width="2.6"/>
                             </g>
 
-                            <!-- Nhãn mực nước nổi -->
                             <g id="svgWaterTagGroup">
                                 <rect id="svgWaterPill" x="38" y="180" width="104" height="16" rx="8" fill="#16A34A"/>
                                 <text id="svgWaterPillText" x="90" y="191" font-size="8.5" font-weight="800" fill="#FFFFFF" text-anchor="middle">Trạm: 0.00m</text>
@@ -509,17 +477,44 @@
                     </div>
                 </div>
 
-                <!-- 3. THẺ KẾ HOẠCH DI CHUYỂN & CHIA CẮT CUNG ĐƯỜNG TẠI HUẾ -->
+                <!-- 3. THẺ KẾ HOẠCH DI CHUYỂN & CHIA CẮT CUNG ĐƯỜNG TÙY CHỈNH THEO KHU VỰC -->
                 <div id="evacPlanCard" class="sonalog-card p-4 space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center flex-shrink-0">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-start gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <i data-lucide="route" class="w-3.5 h-3.5"></i>
                             </span>
                             <div class="min-w-0">
-                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-900 truncate">Kế hoạch di chuyển &amp; Chia cắt đường</h2>
-                                <p id="evacPlanModeSub" class="text-[10.5px] font-bold text-[#1B4D3E]">Chế độ: Nhà 2 tầng (Ưu tiên dời xe &amp; rút lên tầng 2)</p>
+                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-900">Kế hoạch di chuyển &amp; Chia cắt đường</h2>
+                                <p id="evacPlanModeSub" class="text-[10.5px] font-bold text-[#1B4D3E] leading-snug">Chế độ: Nhà 2 tầng (Dời xe sớm, kê đồ &amp; rút lên tầng 2)</p>
                             </div>
+                        </div>
+                        <button onclick="openRoadCutoffModal()" class="px-2.5 py-1.5 rounded-full bg-[#1B4D3E] hover:bg-[#13382D] text-white text-[10.5px] font-extrabold flex items-center gap-1 flex-shrink-0 active:scale-95 transition">
+                            <i data-lucide="plus" class="w-3 h-3"></i>
+                            <span>Thêm điểm</span>
+                        </button>
+                    </div>
+
+                    <!-- Bộ chọn khu vực tuyến đường & nút khôi phục mẫu -->
+                    <div class="p-2.5 rounded-2xl bg-[#F4F7F6] border border-slate-200/80 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <label for="roadAreaSelect" class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                                Khu vực tuyến đường theo dõi:
+                            </label>
+                            <span id="roadStationRefBadge" class="text-[10px] font-bold text-[#1B4D3E]">So với Trạm Kim Long</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <select id="roadAreaSelect" onchange="applyRoadAreaPreset(this.value)" class="flex-1 min-w-0 px-2.5 py-2 rounded-xl bg-white border border-slate-200 text-[11px] font-extrabold text-slate-800">
+                                <option value="noido">Nội đô TP. Huế (Đập Đá • Bến Nghé)</option>
+                                <option value="kimlong_huonglong">Phường Kim Long – Hương Long (Sông Hương)</option>
+                                <option value="vyda_phuhau">Phường Vỹ Dạ – Phú Hậu – Cồn Hến</option>
+                                <option value="songbo">Hạ du Sông Bồ (Trạm Phú Ốc • Quảng Điền)</option>
+                                <option value="songolau">Lưu vực Sông Ô Lâu (Trạm Phong Bình)</option>
+                                <option value="custom">Tùy chỉnh riêng cho khu vực nhà tôi</option>
+                            </select>
+                            <button onclick="resetCurrentRoadPreset()" class="px-2.5 py-2 rounded-xl bg-white hover:bg-[#EBF3F0] border border-slate-200 text-[10.5px] font-extrabold text-[#1B4D3E] flex-shrink-0 active:scale-95 transition" title="Tải lại các điểm mặc định của khu vực đang chọn">
+                                Mẫu chuẩn
+                            </button>
                         </div>
                     </div>
 
@@ -529,8 +524,8 @@
                             <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-300 flex-shrink-0"></i>
                             <span>CẢNH BÁO SƠ TÁN SỚM • NHÀ 1 TẦNG</span>
                         </div>
-                        <p class="text-[11.5px] leading-snug text-red-50 font-medium">
-                            Nhà 1 tầng không có tầng trên trú ẩn. Hãy đưa người già, trẻ nhỏ và phương tiện di chuyển <strong>NGAY LÚC NÀY</strong> trước khi Đập Đá, Bến Nghé và các tuyến đường ngoài bị ngập sâu làm mất lối thoát!
+                        <p id="earlyEvac1FloorText" class="text-[11.5px] leading-snug text-red-50 font-medium">
+                            Nhà 1 tầng không có tầng trên trú ẩn. Hãy đưa người già, trẻ nhỏ và phương tiện di chuyển <strong>NGAY LÚC NÀY</strong> trước khi các tuyến đường khu vực bị ngập sâu làm mất lối thoát!
                         </p>
                         <button onclick="switchTab('map'); showEvacRoute();" class="w-full py-2 px-3 rounded-xl bg-white text-red-700 text-xs font-black flex items-center justify-center gap-1.5 active:scale-98 transition">
                             <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
@@ -549,7 +544,7 @@
                         </p>
                     </div>
 
-                    <!-- Danh sách trạng thái 4 mốc chia cắt cung đường Huế -->
+                    <!-- Danh sách các điểm chia cắt đường có thể thêm/xóa linh hoạt -->
                     <div id="roadCutoffList" class="space-y-1.5 text-[11px]"></div>
                 </div>
 
@@ -591,7 +586,6 @@
                         </div>
                         <input type="range" id="waterLevelSlider" min="0.00" max="6.00" step="0.01" value="0.00" class="forest-slider" oninput="onSliderWaterInput(this.value)">
 
-                        <!-- 7 Nút chọn nhanh mốc lịch sử -->
                         <div class="grid grid-cols-4 gap-1.5">
                             <button onclick="applyWaterPreset(0.00, 0)" class="py-1.5 px-1 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[9.5px] font-extrabold text-[#1B4D3E] border border-[#1B4D3E]/20 leading-tight">
                                 Bình thường<br><span class="font-mono-num">0.00m</span>
@@ -640,7 +634,6 @@
 
                     <div id="householdChecklistContainer" class="space-y-2 text-xs"></div>
 
-                    <!-- Khung xem trước tin nhắn SMS cảnh báo -->
                     <div class="p-3 rounded-2xl bg-[#F4F7F6] border border-slate-200/80 space-y-2">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#1B4D3E]">Nội dung tin nhắn SMS tự động</span>
@@ -725,7 +718,6 @@
             <section id="view-map" class="tab-view hidden absolute inset-0 flex flex-col">
                 <div id="hueGisMap" class="w-full h-full z-0"></div>
 
-                <!-- Banner hướng dẫn chạm bản đồ đặt vị trí nhà -->
                 <div id="pinModeBanner" class="hidden absolute top-3 left-3 right-3 z-[1100] bg-[#1B4D3E] text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2.5 text-xs">
                         <i data-lucide="map-pin" class="w-5 h-5 text-amber-400 animate-bounce flex-shrink-0"></i>
@@ -737,7 +729,6 @@
                     <button onclick="togglePinMode(false)" class="px-3 py-1.5 rounded-xl bg-white/15 text-xs font-bold">Xong</button>
                 </div>
 
-                <!-- Thanh chọn khu vực Huế & Công cụ GIS nổi phía trên -->
                 <div id="mapTopControls" class="absolute top-3 left-3 right-3 z-[950] ios-glass rounded-3xl p-3 shadow-lg border border-white space-y-2">
                     <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                         <button onclick="jumpToNeighborhood(0)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-[#1B4D3E] text-white text-[11px] font-bold whitespace-nowrap">Đường Nguyễn Huệ</button>
@@ -761,7 +752,6 @@
                     </div>
                 </div>
 
-                <!-- Thẻ lộ trình sơ tán an toàn & trạng thái ngôi nhà phía dưới bản đồ -->
                 <div class="absolute bottom-24 left-3 right-3 z-[950] space-y-2">
                     <div id="evacRouteCard" class="hidden ios-glass rounded-3xl p-3.5 shadow-xl border border-[#1B4D3E]/25 space-y-2">
                         <div class="flex items-center justify-between gap-2">
@@ -812,7 +802,6 @@
                     <p class="text-[11px] text-slate-500 mt-1 font-medium">Nhập lượng thực tế hiện có để ước tính số ngày duy trì cho gia đình</p>
                 </div>
 
-                <!-- 1. THẺ ƯỚC TÍNH THỜI GIAN DUY TRÌ THỰC TẾ -->
                 <div id="survivalSummaryCard" class="sonalog-card p-4 space-y-2.5 border-l-4 border-l-[#1B4D3E]">
                     <div class="flex items-center justify-between gap-2">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E] uppercase tracking-wide">
@@ -831,7 +820,6 @@
                     </p>
                 </div>
 
-                <!-- 2. THÀNH PHẦN GIA ĐÌNH -->
                 <div class="sonalog-card p-4 space-y-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -847,7 +835,6 @@
                     <div id="kitMembersList" class="divide-y divide-slate-100"></div>
                 </div>
 
-                <!-- 3. SỐ NGÀY DỰ TRỮ MỤC TIÊU -->
                 <div class="sonalog-card p-4 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -869,7 +856,6 @@
                     </div>
                 </div>
 
-                <!-- 4. THIẾT LẬP LƯỢNG DỰ TRỮ HIỆN CÓ -->
                 <div class="sonalog-card p-4 space-y-3.5">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -898,7 +884,6 @@
                     <span id="kitReadyBadge" class="text-[11px] font-extrabold text-[#1B4D3E] bg-[#EBF3F0] px-2.5 py-1 rounded-full">3/8 sẵn sàng</span>
                 </div>
 
-                <!-- Danh mục túi khẩn cấp -->
                 <div class="sonalog-card px-4 py-2 divide-y divide-slate-100">
                     <div id="kitChecklistItems" class="divide-y divide-slate-100"></div>
                     <button onclick="openBagItemModal()" class="w-full py-3 flex items-center justify-between text-xs font-extrabold text-[#1B4D3E]">
@@ -909,7 +894,6 @@
                     </button>
                 </div>
 
-                <!-- Liên hệ khẩn cấp -->
                 <div class="sonalog-card p-4 space-y-2.5">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
@@ -1207,6 +1191,40 @@
         </nav>
 
         <!-- ================================================================= -->
+        <!-- MODAL THÊM ĐIỂM CHIA CẮT / TRÀN ĐƯỜNG THEO KHU VỰC HỘ DÂN         -->
+        <!-- ================================================================= -->
+        <div id="roadCutoffModal" class="hidden absolute inset-0 bg-slate-900/45 backdrop-blur-xs z-[3000] flex items-end justify-center p-3">
+            <div class="bg-white rounded-3xl w-full p-5 space-y-3 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Thêm điểm đường ngập / tràn</h3>
+                        <p id="roadModalStationHint" class="text-[11px] font-semibold text-[#1B4D3E]">So với mực nước Trạm Kim Long</p>
+                    </div>
+                    <button onclick="closeRoadCutoffModal()" class="p-1.5 rounded-full bg-slate-100 text-slate-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tên tuyến đường / cầu tràn gần nhà</label>
+                        <input type="text" id="newRoadNameInput" placeholder="Ví dụ: Đập Đá, Kiệt 5 Nguyễn Bỉnh Khiêm..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Mực nước trạm đo bắt đầu tràn qua (m)</label>
+                        <input type="number" id="newRoadLevelInput" step="0.05" min="0.10" max="6.00" value="2.20" class="w-full px-3.5 py-2.5 rounded-xl bg-[#EBF3F0] border border-[#1B4D3E]/25 text-sm font-mono-num font-extrabold text-[#1B4D3E]">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Ghi chú hướng tránh / cảnh báo</label>
+                        <input type="text" id="newRoadNoteInput" placeholder="Ví dụ: Ngập sâu 40cm, tránh đi qua hướng Lê Lợi" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-semibold">
+                    </div>
+                </div>
+                <button onclick="confirmAddRoadCutoff()" class="w-full py-2.5 rounded-2xl bg-[#1B4D3E] text-white text-xs font-extrabold">
+                    Lưu điểm chia cắt đường
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
         <!-- MODAL GIỚI THIỆU & VERSION V1                                     -->
         <!-- ================================================================= -->
         <div id="aboutModal" class="hidden absolute inset-0 bg-slate-900/45 backdrop-blur-xs z-[3000] flex items-end sm:items-center justify-center p-3">
@@ -1277,7 +1295,7 @@
                     </button>
                 </div>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Toàn bộ thông số hộ gia đình, vị trí ghim bản đồ và danh sách dự trữ sẽ được khôi phục về mặc định ban đầu (Mốc 15/11/2023: 4.34m, Nhà 2 tầng).
+                    Toàn bộ thông số hộ gia đình, vị trí ghim bản đồ, điểm chia cắt đường và danh sách dự trữ sẽ được khôi phục về mặc định ban đầu (Mốc 15/11/2023: 4.34m, Nhà 2 tầng).
                 </p>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="closeResetModal()" class="py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-xs font-extrabold">Hủy</button>
@@ -1361,7 +1379,7 @@
 
     <script>
         // =====================================================================
-        // 1. STATE & CẤU HÌNH HỆ THỐNG (LOCALSTORAGE KEY SẠCH MỚI)
+        // 1. STATE & CẤU HÌNH HỆ THỐNG (LOCALSTORAGE KEY)
         // =====================================================================
         const STORAGE_KEY = 'hue_floodguard_v1_final';
         let map = null;
@@ -1378,25 +1396,66 @@
         ];
 
         const HUE_NEIGHBORHOODS = [
-            { name: 'Đường Nguyễn Huệ', address: 'Đường Nguyễn Huệ - Đống Đa, TP. Huế', lat: 16.4612, lng: 107.5895, station: 'kimlong' },
-            { name: 'Phường Kim Long', address: 'Đường Kim Long, TP. Huế', lat: 16.4590, lng: 107.5565, station: 'kimlong' },
-            { name: 'Phường Vỹ Dạ', address: 'Phạm Văn Đồng - Vỹ Dạ, TP. Huế', lat: 16.4752, lng: 107.6048, station: 'kimlong' },
-            { name: 'Đập Đá - Lê Lợi', address: 'Khu vực Đập Đá (+1.80m) - Lê Lợi, TP. Huế', lat: 16.4728, lng: 107.5978, station: 'kimlong' },
-            { name: 'Phường Phú Hậu', address: 'Đường Chi Lăng - Phú Hậu, TP. Huế', lat: 16.4842, lng: 107.5960, station: 'kimlong' },
-            { name: 'Quảng Điền - Sông Bồ', address: 'Thị trấn Sịa - Quảng Điền, Huế', lat: 16.5785, lng: 107.5150, station: 'phuoc' }
+            { name: 'Đường Nguyễn Huệ', address: 'Đường Nguyễn Huệ - Đống Đa, TP. Huế', lat: 16.4612, lng: 107.5895, station: 'kimlong', areaKey: 'noido' },
+            { name: 'Phường Kim Long', address: 'Đường Kim Long, TP. Huế', lat: 16.4590, lng: 107.5565, station: 'kimlong', areaKey: 'kimlong_huonglong' },
+            { name: 'Phường Vỹ Dạ', address: 'Phạm Văn Đồng - Vỹ Dạ, TP. Huế', lat: 16.4752, lng: 107.6048, station: 'kimlong', areaKey: 'vyda_phuhau' },
+            { name: 'Đập Đá - Lê Lợi', address: 'Khu vực Đập Đá (+1.80m) - Lê Lợi, TP. Huế', lat: 16.4728, lng: 107.5978, station: 'kimlong', areaKey: 'noido' },
+            { name: 'Phường Phú Hậu', address: 'Đường Chi Lăng - Phú Hậu, TP. Huế', lat: 16.4842, lng: 107.5960, station: 'kimlong', areaKey: 'vyda_phuhau' },
+            { name: 'Quảng Điền - Sông Bồ', address: 'Thị trấn Sịa - Quảng Điền, Huế', lat: 16.5785, lng: 107.5150, station: 'phuoc', areaKey: 'songbo' }
         ];
 
-        const ROAD_CUTOFF_MILESTONES = [
-            { trigger: 1.80, title: 'Đập Đá tràn nước (Cấm qua lại)', detail: 'Cao trình +1.80m • Tránh qua hướng Vỹ Dạ – Lê Lợi.' },
-            { trigger: 2.50, title: 'Đường trũng Kim Long, Vỹ Dạ, Phú Hậu', detail: 'Nước bắt đầu ngập sâu các tuyến ven sông.' },
-            { trigger: 3.20, title: 'Ngã tư Nguyễn Công Trứ – Bến Nghé, Đống Đa', detail: 'Ngập sâu, xe máy dễ chết máy khi đi qua.' },
-            { trigger: 3.50, title: 'Ngập diện rộng nội đô TP. Huế (BĐ III)', detail: 'Nhiều cung đường bị chia cắt hoàn toàn.' }
-        ];
-
-        const IMPASSABLE_ROADS = [
-            { name: 'Đập Đá tràn nước (Cao trình +1.80m)', lat: 16.4733, lng: 107.5982, trigger: 1.80 },
-            { name: 'Ngã tư Nguyễn Công Trứ - Bến Nghé', lat: 16.4694, lng: 107.5945, trigger: 3.20 }
-        ];
+        // BỘ MẪU CÁC ĐIỂM CHIA CẮT / TRÀN ĐƯỜNG THEO TỪNG KHU VỰC TẠI HUẾ
+        const AREA_ROAD_PRESETS = {
+            noido: {
+                label: 'Nội đô TP. Huế (Đập Đá • Bến Nghé)',
+                stationId: 'kimlong',
+                roads: [
+                    { id: 'nd1', trigger: 1.80, title: 'Đập Đá tràn nước (Cấm qua lại)', detail: 'Cao trình +1.80m • Tránh hướng Vỹ Dạ – Lê Lợi.', lat: 16.4733, lng: 107.5982 },
+                    { id: 'nd2', trigger: 2.50, title: 'Đường trũng Kim Long, Vỹ Dạ, Phú Hậu', detail: 'Nước bắt đầu ngập sâu các tuyến ven sông.', lat: 16.4680, lng: 107.6020 },
+                    { id: 'nd3', trigger: 3.20, title: 'Ngã tư Nguyễn Công Trứ – Bến Nghé, Đống Đa', detail: 'Ngập sâu, xe máy dễ chết máy khi đi qua.', lat: 16.4694, lng: 107.5945 },
+                    { id: 'nd4', trigger: 3.50, title: 'Ngập diện rộng nội đô TP. Huế (BĐ III)', detail: 'Nhiều cung đường bị chia cắt hoàn toàn.', lat: 16.4650, lng: 107.5880 }
+                ]
+            },
+            kimlong_huonglong: {
+                label: 'Phường Kim Long – Hương Long (Sông Hương)',
+                stationId: 'kimlong',
+                roads: [
+                    { id: 'kl1', trigger: 1.90, title: 'Đường ven sông Kim Long – Bến đò Thọ Lộc', detail: 'Nước tràn mặt đường ven bờ Bắc Sông Hương.', lat: 16.4585, lng: 107.5540 },
+                    { id: 'kl2', trigger: 2.40, title: 'Kiệt thấp Kim Long – Phạm Thị Liên', detail: 'Ngập cục bộ các kiệt trũng, khó đi xe máy.', lat: 16.4598, lng: 107.5585 },
+                    { id: 'kl3', trigger: 3.10, title: 'Ngã ba Lê Duẩn – Kim Long – Cầu Dã Viên', detail: 'Nước dâng cao chia cắt hướng về trung tâm.', lat: 16.4632, lng: 107.5675 },
+                    { id: 'kl4', trigger: 3.50, title: 'Ngập sâu toàn tuyến Kim Long (BĐ III)', detail: 'Cô lập đường bộ, chỉ di chuyển bằng ghe cứu hộ.', lat: 16.4590, lng: 107.5565 }
+                ]
+            },
+            vyda_phuhau: {
+                label: 'Phường Vỹ Dạ – Phú Hậu – Cồn Hến',
+                stationId: 'kimlong',
+                roads: [
+                    { id: 'vd1', trigger: 1.80, title: 'Đập Đá & đường vào Cồn Hến (Ưng Bình)', detail: 'Cao trình +1.80m • Cô lập lối vào Cồn Hến.', lat: 16.4735, lng: 107.5985 },
+                    { id: 'vd2', trigger: 2.30, title: 'Đường Hàn Mặc Tử – Nguyễn Sinh Cung (Vỹ Dạ)', detail: 'Nước sông Hương & sông Như Ý tràn lên mặt đường.', lat: 16.4752, lng: 107.6048 },
+                    { id: 'vd3', trigger: 2.80, title: 'Đường Chi Lăng – Chợ Dinh (Phú Hậu)', detail: 'Ngập sâu, chia cắt hướng về Cầu Gia Hội.', lat: 16.4842, lng: 107.5960 },
+                    { id: 'vd4', trigger: 3.50, title: 'Ngập diện rộng Vỹ Dạ – Phú Hậu (BĐ III)', detail: 'Toàn bộ khu vực trũng bị chia cắt giao thông.', lat: 16.4780, lng: 107.6010 }
+                ]
+            },
+            songbo: {
+                label: 'Hạ du Sông Bồ (Trạm Phú Ốc • Quảng Điền)',
+                stationId: 'phuoc',
+                roads: [
+                    { id: 'sb1', trigger: 2.20, title: 'Tỉnh lộ 4 & đường ven sông Bồ (Thị trấn Sịa)', detail: 'Nước tràn qua các đoạn trũng thấp ven đê.', lat: 16.5785, lng: 107.5150 },
+                    { id: 'sb2', trigger: 3.00, title: 'Đập tràn Thủ Lễ – Quảng Phước', detail: 'BĐ II Sông Bồ • Nước chảy xiết, cấm qua lại.', lat: 16.5650, lng: 107.5260 },
+                    { id: 'sb3', trigger: 3.80, title: 'Tuyến QL49B qua Quảng Thọ – Quảng An', detail: 'Ngập sâu nhiều đoạn, chia cắt giao thông liên xã.', lat: 16.5520, lng: 107.5420 },
+                    { id: 'sb4', trigger: 4.50, title: 'Ngập diện rộng hạ du Sông Bồ (BĐ III)', detail: 'Cô lập nhiều khu dân cư thấp trũng ven sông.', lat: 16.5350, lng: 107.5380 }
+                ]
+            },
+            songolau: {
+                label: 'Lưu vực Sông Ô Lâu (Trạm Phong Bình)',
+                stationId: 'phongbinh',
+                roads: [
+                    { id: 'ol1', trigger: 1.80, title: 'Đường liên xã Phong Bình – Phong Hòa', detail: 'Nước bắt đầu tràn qua các ngầm tràn thấp.', lat: 16.6320, lng: 107.4280 },
+                    { id: 'ol2', trigger: 2.50, title: 'Tỉnh lộ 6 & khu vực chợ Phong Bình', detail: 'Ngập cục bộ, hạn chế di chuyển xe máy ban đêm.', lat: 16.6280, lng: 107.4350 },
+                    { id: 'ol3', trigger: 4.50, title: 'Ngập sâu vùng trũng Ô Lâu (BĐ III)', detail: 'Chia cắt đường bộ, di chuyển bằng ghe/xuồng cứu hộ.', lat: 16.6200, lng: 107.4400 }
+                ]
+            }
+        };
 
         const FLOOD_RISK_ZONES = [
             { name: 'Vùng ngập Đập Đá - Cồn Hến (>1.80m)', lat: 16.4735, lng: 107.5985, radius: 320, trigger: 1.80 },
@@ -1437,6 +1496,8 @@
             reserveDays: 7,
             showFloodZones: true,
             selectedShelterIdx: 0,
+            roadAreaKey: 'noido',
+            roadCutoffs: JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads)),
             completedTasks: {},
             members: [
                 { id: 'm1', name: 'Bố', role: 'Người lớn' },
@@ -1474,6 +1535,10 @@
                         ...DEFAULT_STATE,
                         ...parsed,
                         houseType: parsed.houseType === '1floor' ? '1floor' : '2floor',
+                        roadAreaKey: parsed.roadAreaKey || 'noido',
+                        roadCutoffs: Array.isArray(parsed.roadCutoffs)
+                            ? parsed.roadCutoffs
+                            : JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads)),
                         completedTasks: parsed.completedTasks && typeof parsed.completedTasks === 'object' ? parsed.completedTasks : {},
                         supplies: Array.isArray(parsed.supplies) && parsed.supplies.length > 0
                             ? parsed.supplies
@@ -1498,8 +1563,15 @@
             return +(state.kimLongLevel * station.ratio).toFixed(2);
         }
 
+        function getMinRoadCutoff() {
+            if (!Array.isArray(state.roadCutoffs) || state.roadCutoffs.length === 0) {
+                return { trigger: 1.80, title: 'Đập Đá tràn nước', detail: 'Cao trình +1.80m' };
+            }
+            return state.roadCutoffs.reduce((minObj, cur) => (cur.trigger < minObj.trigger ? cur : minObj), state.roadCutoffs[0]);
+        }
+
         // =====================================================================
-        // 2. LOGIC PHÂN TÍCH NGẬP & KẾ HOẠCH DI CHUYỂN THEO LOẠI NHÀ
+        // 2. LOGIC PHÂN TÍCH NGẬP & KẾ HOẠCH DI CHUYỂN THEO LOẠI NHÀ & KHU VỰC
         // =====================================================================
         function getOfficialAlertTier(station, level) {
             if (level > station.bd3) {
@@ -1521,9 +1593,10 @@
             const doorstepLvl = +(state.floorLevel - 0.20).toFixed(2);
             const is1Floor = state.houseType === '1floor';
 
+            const firstRoad = getMinRoadCutoff();
             const diffFloorCm = Math.round((state.floorLevel - currentLvl) * 100);
             const diffYardCm = Math.round((state.yardLevel - currentLvl) * 100);
-            const needEarly1FloorEvac = is1Floor && (state.kimLongLevel >= 1.80 || currentLvl >= st.bd2 || diffYardCm <= 40);
+            const needEarly1FloorEvac = is1Floor && (currentLvl >= firstRoad.trigger || currentLvl >= st.bd2 || diffYardCm <= 40);
 
             let etaText = `${officialTier.label} • Chưa ngập`;
             if (diffFloorCm <= 0) {
@@ -1573,7 +1646,7 @@
                     boxClass: 'bg-red-50/90 border-red-200',
                     etaText
                 };
-            } else if (diffYardCm <= 0 || currentLvl >= st.bd2 || (is1Floor && state.kimLongLevel >= 1.80)) {
+            } else if (diffYardCm <= 0 || currentLvl >= st.bd2 || (is1Floor && currentLvl >= firstRoad.trigger)) {
                 return {
                     key: 'yard',
                     officialTier,
@@ -1581,7 +1654,7 @@
                     heroBadge: is1Floor ? 'CẢNH BÁO SỚM: SƠ TÁN NHÀ 1 TẦNG' : 'CHÚ Ý: NƯỚC VÀO SÂN',
                     shortBadge: `Cách nền +${diffFloorCm}cm`,
                     plainAdvice: is1Floor
-                        ? `Còn cách nền +${diffFloorCm} cm • Đường ngoài bắt đầu ngập (Đập Đá +1.80m): Nhà 1 tầng cần SƠ TÁN SỚM ngay!`
+                        ? `Còn cách nền +${diffFloorCm} cm • Tuyến ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) bắt đầu ngập: Nhà 1 tầng cần SƠ TÁN SỚM ngay!`
                         : (diffYardCm <= 0
                             ? `Nước đã vào sân ${Math.abs(diffYardCm)} cm (cách nền +${diffFloorCm} cm). Dời xe & kê cao đồ đạc.`
                             : `Nước sắp tràn vào sân (cách sân +${diffYardCm} cm). Dời xe lên vùng cao trước khi ngập đường.`),
@@ -1602,7 +1675,7 @@
                     heroBadge: 'THEO DÕI: BÁO ĐỘNG I',
                     shortBadge: `BĐ I (+${diffFloorCm}cm)`,
                     plainAdvice: is1Floor
-                        ? `Còn cách nền +${diffFloorCm} cm • Nhà 1 tầng sẵn sàng phương án sơ tán sớm nếu nước tiếp tục lên.`
+                        ? `Còn cách nền +${diffFloorCm} cm • Nhà 1 tầng sẵn sàng phương án sơ tán sớm trước mốc tràn đường ${firstRoad.trigger.toFixed(2)}m.`
                         : `Còn cách nền +${diffFloorCm} cm • Nước bắt đầu dâng vùng trũng ven sông.`,
                     subAction: is1Floor
                         ? 'Chuẩn bị túi thoát hiểm, xác định trước tuyến đường cao ráo về điểm sơ tán (ĐH Sư phạm Huế).'
@@ -1695,6 +1768,9 @@
             layers.shelters.clearLayers();
             layers.house.clearLayers();
 
+            const activeSt = getActiveStation();
+            const activeStLvl = getStationLevel(activeSt);
+
             if (state.showFloodZones && state.kimLongLevel > 0) {
                 FLOOD_RISK_ZONES.forEach(z => {
                     if (state.kimLongLevel >= z.trigger) {
@@ -1710,17 +1786,19 @@
                 });
             }
 
-            IMPASSABLE_ROADS.forEach(road => {
-                if (state.kimLongLevel >= road.trigger) {
+            (state.roadCutoffs || []).forEach((road, idx) => {
+                if (activeStLvl >= road.trigger) {
+                    const rLat = road.lat || (state.lat + 0.0018 * (idx + 1));
+                    const rLng = road.lng || (state.lng + 0.0015 * (idx % 2 === 0 ? 1 : -1));
                     const warnHtml = `
                         <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full">
                             <div class="px-2 py-0.5 rounded-lg bg-red-600 text-white text-[9.5px] font-extrabold whitespace-nowrap shadow-md border border-white">
-                                ⚠ ${road.name}
+                                ⚠ ${road.title} (≥${road.trigger.toFixed(2)}m)
                             </div>
                             <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-600"></div>
                         </div>
                     `;
-                    L.marker([road.lat, road.lng], { icon: L.divIcon({ html: warnHtml, iconSize: [0, 0] }) }).addTo(layers.hazards);
+                    L.marker([rLat, rLng], { icon: L.divIcon({ html: warnHtml, iconSize: [0, 0] }) }).addTo(layers.hazards);
                 }
             });
 
@@ -1800,6 +1878,10 @@
             state.lng = item.lng;
             state.address = item.address;
             state.stationId = item.station;
+            if (item.areaKey && AREA_ROAD_PRESETS[item.areaKey]) {
+                state.roadAreaKey = item.areaKey;
+                state.roadCutoffs = JSON.parse(JSON.stringify(AREA_ROAD_PRESETS[item.areaKey].roads));
+            }
             persistState();
 
             document.querySelectorAll('.neighborhood-pill').forEach((btn, idx) => {
@@ -1889,9 +1971,10 @@
             const driveMins = Math.max(2, Math.round((distKm / 20) * 60));
             const walkMins = Math.max(4, Math.round((distKm / 4.5) * 60));
 
+            const firstRoad = getMinRoadCutoff();
             const roadCutoffWarning = state.houseType === '1floor'
-                ? '<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Cần di chuyển SỚM trước khi Đập Đá (+1.80m) &amp; Bến Nghé (+3.20m) chia cắt!</div>'
-                : '<div>• Tuyến ưu tiên trục đường cao ráo, tránh Đập Đá (+1.80m) &amp; vùng trũng Bến Nghé.</div>';
+                ? `<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Cần di chuyển SỚM trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) chia cắt!</div>`
+                : `<div>• Tuyến ưu tiên trục đường cao ráo, tránh ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m).</div>`;
 
             document.getElementById('evacRouteDetails').innerHTML = `
                 <div class="font-extrabold text-[#16A34A]">Quãng đường: ${distKm} km • Đi xe ~${driveMins} phút (Đi bộ ~${walkMins} phút)</div>
@@ -1909,7 +1992,89 @@
         }
 
         // =====================================================================
-        // 4. ĐỒNG BỘ GIAO DIỆN 5 TAB (1 SƠ ĐỒ DUY NHẤT + KẾ HOẠCH ĐƯỜNG)
+        // 4. QUẢN LÝ ĐIỂM CHIA CẮT / TRÀN ĐƯỜNG THEO KHU VỰC (MỚI TÍCH HỢP)
+        // =====================================================================
+        function applyRoadAreaPreset(areaKey) {
+            if (areaKey === 'custom') {
+                state.roadAreaKey = 'custom';
+                persistState();
+                refreshAllViews();
+                openRoadCutoffModal();
+                return;
+            }
+            const preset = AREA_ROAD_PRESETS[areaKey];
+            if (!preset) return;
+            state.roadAreaKey = areaKey;
+            state.roadCutoffs = JSON.parse(JSON.stringify(preset.roads));
+            if (preset.stationId && preset.stationId !== state.stationId) {
+                state.stationId = preset.stationId;
+            }
+            persistState();
+            refreshAllViews();
+            showPushBanner('Đã chọn tuyến đường khu vực', preset.label, '#1B4D3E');
+        }
+
+        function resetCurrentRoadPreset() {
+            const key = AREA_ROAD_PRESETS[state.roadAreaKey] ? state.roadAreaKey : 'noido';
+            state.roadAreaKey = key;
+            state.roadCutoffs = JSON.parse(JSON.stringify(AREA_ROAD_PRESETS[key].roads));
+            persistState();
+            refreshAllViews();
+            showPushBanner('Đã khôi phục mẫu chuẩn khu vực', AREA_ROAD_PRESETS[key].label, '#1B4D3E');
+        }
+
+        function openRoadCutoffModal() {
+            const st = getActiveStation();
+            document.getElementById('roadModalStationHint').textContent = `So với mực nước ${st.name} (${st.river})`;
+            document.getElementById('roadCutoffModal').classList.remove('hidden');
+            safeLucide();
+        }
+
+        function closeRoadCutoffModal() {
+            document.getElementById('roadCutoffModal').classList.add('hidden');
+        }
+
+        function confirmAddRoadCutoff() {
+            const titleEl = document.getElementById('newRoadNameInput');
+            const lvlEl = document.getElementById('newRoadLevelInput');
+            const noteEl = document.getElementById('newRoadNoteInput');
+
+            const title = (titleEl.value || '').trim();
+            const trigger = parseFloat(lvlEl.value);
+            const detail = (noteEl.value || '').trim();
+
+            if (!title || isNaN(trigger) || trigger <= 0) {
+                showPushBanner('Thiếu thông tin điểm tràn', 'Vui lòng nhập tên tuyến đường và mực nước tràn (m).', '#EA580C');
+                return;
+            }
+
+            if (!Array.isArray(state.roadCutoffs)) state.roadCutoffs = [];
+            state.roadCutoffs.push({
+                id: 'rc_' + Date.now(),
+                trigger: +Math.min(6.00, Math.max(0.10, trigger)).toFixed(2),
+                title,
+                detail: detail || `Đường bắt đầu ngập tràn khi trạm đo đạt từ ${trigger.toFixed(2)}m.`
+            });
+            state.roadCutoffs.sort((a, b) => a.trigger - b.trigger);
+            state.roadAreaKey = 'custom';
+
+            titleEl.value = '';
+            noteEl.value = '';
+            closeRoadCutoffModal();
+            persistState();
+            refreshAllViews();
+            showPushBanner('Đã thêm điểm chia cắt đường', `${title} (Từ ${trigger.toFixed(2)}m)`, '#1B4D3E');
+        }
+
+        function removeRoadCutoff(id) {
+            state.roadCutoffs = (state.roadCutoffs || []).filter(r => r.id !== id);
+            state.roadAreaKey = 'custom';
+            persistState();
+            refreshAllViews();
+        }
+
+        // =====================================================================
+        // 5. ĐỒNG BỘ GIAO DIỆN 5 TAB (1 SƠ ĐỒ DUY NHẤT + KẾ HOẠCH ĐƯỜNG)
         // =====================================================================
         function toggleHouseTypeQuick() {
             state.houseType = state.houseType === '1floor' ? '2floor' : '1floor';
@@ -1959,10 +2124,8 @@
             const flood = evaluateHouseholdFlood();
             const is1Floor = state.houseType === '1floor';
 
-            // Top Header
             document.getElementById('headerLiveMeta').textContent = `${st.name.replace('Trạm ', '')}: ${stLvl.toFixed(2)}m • Hue-S 30p/lần`;
 
-            // Hero Card
             document.getElementById('heroStatusCard').style.borderTopColor = flood.color;
             document.getElementById('heroOwnerName').textContent = `Hộ ${state.ownerName}`;
             const typePill = document.getElementById('heroHouseTypePill');
@@ -1994,7 +2157,6 @@
             document.getElementById('heroFloorDiff').textContent = flood.floorLabel;
             document.getElementById('etaCountdownBadge').textContent = flood.etaText;
 
-            // Single House Cross-Section Diagram
             document.getElementById('diagramHouseTypeBadge').textContent = is1Floor
                 ? 'Nhà 1 tầng • Tầng trệt'
                 : 'Nhà 2 tầng • Có tầng trên';
@@ -2014,7 +2176,6 @@
                 ? 'font-extrabold text-red-700 truncate'
                 : 'font-bold text-slate-600 truncate';
 
-            // Water SVG Physics (0.00m -> y=200, yard -> y=158, floor -> y=132, 6.00m -> y=24)
             const zeroY = 200;
             const yardY = 158;
             const floorY = 132;
@@ -2050,25 +2211,58 @@
             document.getElementById('evacPlanModeSub').textContent = is1Floor
                 ? 'Chế độ: Nhà 1 tầng (Cảnh báo di chuyển sớm trước khi ngập đường)'
                 : 'Chế độ: Nhà 2 tầng (Dời xe sớm, kê đồ & rút lên tầng 2 khi đường ngập)';
-            document.getElementById('earlyEvac1FloorBox').classList.toggle('hidden', !flood.needEarly1FloorEvac);
-            document.getElementById('retreat2FloorBox').classList.toggle('hidden', !(!is1Floor && state.kimLongLevel >= 2.50));
+            document.getElementById('roadStationRefBadge').textContent = `So với ${st.name}`;
+            document.getElementById('roadAreaSelect').value = state.roadAreaKey || 'noido';
 
-            document.getElementById('roadCutoffList').innerHTML = ROAD_CUTOFF_MILESTONES.map(m => {
-                const isCut = state.kimLongLevel >= m.trigger;
-                return `
-                    <div class="p-2.5 rounded-xl border flex items-start justify-between gap-2 ${isCut ? 'bg-red-50/90 border-red-200' : 'bg-[#F4F7F6] border-slate-200/70'}">
-                        <div class="min-w-0">
-                            <div class="font-extrabold ${isCut ? 'text-red-700' : 'text-slate-800'}">${m.title}</div>
-                            <div class="text-[10.5px] ${isCut ? 'text-red-600' : 'text-slate-500'}">${m.detail}</div>
-                        </div>
-                        <span class="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold font-mono-num flex-shrink-0 ${isCut ? 'bg-red-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}">
-                            ${isCut ? 'ĐÃ CHIA CẮT' : `Từ ${m.trigger.toFixed(2)}m`}
-                        </span>
+            const roads = Array.isArray(state.roadCutoffs) ? state.roadCutoffs : [];
+            const activeCutRoads = roads.filter(r => stLvl >= r.trigger);
+
+            document.getElementById('earlyEvac1FloorBox').classList.toggle('hidden', !flood.needEarly1FloorEvac);
+            if (flood.needEarly1FloorEvac) {
+                const roadNames = activeCutRoads.length > 0
+                    ? activeCutRoads.map(r => `${r.title} (${r.trigger.toFixed(2)}m)`).join(', ')
+                    : `${getMinRoadCutoff().title} (${getMinRoadCutoff().trigger.toFixed(2)}m)`;
+                document.getElementById('earlyEvac1FloorText').innerHTML = `
+                    Nhà 1 tầng không có tầng trên trú ẩn. Hãy đưa người già, trẻ nhỏ và phương tiện di chuyển <strong>NGAY LÚC NÀY</strong> trước khi <strong>${roadNames}</strong> ngập sâu làm mất lối thoát!
+                `;
+            }
+
+            document.getElementById('retreat2FloorBox').classList.toggle('hidden', !(!is1Floor && activeCutRoads.length >= 2));
+
+            if (roads.length === 0) {
+                document.getElementById('roadCutoffList').innerHTML = `
+                    <div class="p-3.5 rounded-2xl bg-[#F4F7F6] border border-dashed border-slate-300 text-center space-y-1.5">
+                        <div class="text-xs font-bold text-slate-600">Chưa có điểm tràn đường nào cho khu vực này</div>
+                        <button onclick="openRoadCutoffModal()" class="px-3 py-1.5 rounded-xl bg-[#1B4D3E] text-white text-[11px] font-extrabold">
+                            + Thêm điểm tràn đường gần nhà
+                        </button>
                     </div>
                 `;
-            }).join('');
+            } else {
+                document.getElementById('roadCutoffList').innerHTML = roads.map(m => {
+                    const isCut = stLvl >= m.trigger;
+                    const diffCm = Math.round((m.trigger - stLvl) * 100);
+                    return `
+                        <div class="p-2.5 rounded-xl border flex items-start justify-between gap-2 ${isCut ? 'bg-red-50/90 border-red-200' : 'bg-[#F4F7F6] border-slate-200/70'}">
+                            <div class="min-w-0">
+                                <div class="font-extrabold ${isCut ? 'text-red-700' : 'text-slate-800'}">${m.title}</div>
+                                <div class="text-[10.5px] ${isCut ? 'text-red-600 font-semibold' : 'text-slate-500'} mt-0.5">
+                                    ${isCut ? `ĐÃ NGẬP TRÀN (+${Math.abs(diffCm)}cm) • ` : `Còn cách ${diffCm}cm • `}${m.detail}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <span class="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold font-mono-num ${isCut ? 'bg-red-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}">
+                                    ${isCut ? 'ĐÃ CHIA CẮT' : `Từ ${m.trigger.toFixed(2)}m`}
+                                </span>
+                                <button onclick="removeRoadCutoff('${m.id}')" class="p-1 rounded-lg text-slate-400 hover:text-red-600" title="Xóa điểm này">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
 
-            // 4 Stations Grid
             document.getElementById('stationsGrid').innerHTML = HYDRO_STATIONS.map(station => {
                 const lvl = getStationLevel(station);
                 const selected = station.id === state.stationId;
@@ -2087,22 +2281,17 @@
                 `;
             }).join('');
 
-            // Slider Readout
             document.getElementById('sliderKimLongReadout').textContent = `${state.kimLongLevel.toFixed(2)} m`;
             document.getElementById('waterLevelSlider').value = state.kimLongLevel.toFixed(2);
 
-            // Interactive Checklist & SMS Preview
             renderActionChecklist(flood, st);
 
-            // Map Bottom Bar
             document.getElementById('mapHouseStatusDot').style.backgroundColor = flood.color;
             document.getElementById('mapHouseStatusTitle').textContent = `Nhà ${is1Floor ? '1 tầng' : '2 tầng'}: ${flood.heroBadge}`;
             document.getElementById('mapHouseCoordsSub').textContent = `${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E • ${state.address}`;
 
-            // Needs & Kit Tabs
             renderNeedsAndKitTabs();
 
-            // Settings Form
             pendingHouseType = state.houseType;
             updateSettingsHouseCards(pendingHouseType);
             document.getElementById('cfgOwnerName').value = state.ownerName;
@@ -2130,6 +2319,7 @@
 
         function renderActionChecklist(flood, st) {
             const is1Floor = state.houseType === '1floor';
+            const firstRoad = getMinRoadCutoff();
 
             const actions1Floor = {
                 safe: [
@@ -2138,10 +2328,10 @@
                 ],
                 watch: [
                     { id: '1f_watch_1', text: `BÁO ĐỘNG I (${st.river} ≥ ${st.bd1.toFixed(2)}m): Theo dõi sát Hue-S, khơi thông cống rãnh quanh nhà.` },
-                    { id: '1f_watch_2', text: 'Nhà 1 tầng: Chuẩn bị hành lý gọn nhẹ, liên hệ trước nhà người thân tầng cao để sẵn sàng sơ tán sớm.' }
+                    { id: '1f_watch_2', text: `Nhà 1 tầng: Chuẩn bị hành lý gọn nhẹ để sẵn sàng sơ tán trước mốc tràn ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m).` }
                 ],
                 yard: [
-                    { id: '1f_yard_1', text: 'SƠ TÁN SỚM NGAY: Đưa người già, trẻ nhỏ và xe máy rời nhà 1 tầng trước khi Đập Đá (+1.80m) & đường ngoài ngập sâu!' },
+                    { id: '1f_yard_1', text: `SƠ TÁN SỚM NGAY: Đưa người già, trẻ nhỏ và xe máy rời nhà 1 tầng trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) ngập sâu!` },
                     { id: '1f_yard_2', text: 'Kê nhanh đồ nhẹ lên bàn/giường, khóa cửa, ngắt cầu dao điện tổng và mang theo túi thoát hiểm.' }
                 ],
                 doorstep: [
@@ -2164,7 +2354,7 @@
                     { id: '2f_watch_2', text: 'Chuẩn bị nước sạch, thực phẩm dự trữ và kiểm tra cầu dao riêng cho tầng trệt.' }
                 ],
                 yard: [
-                    { id: '2f_yard_1', text: 'Dời ngay xe máy, ô tô lên vùng cao trước khi các cung đường ngoài bị ngập chia cắt.' },
+                    { id: '2f_yard_1', text: `Dời ngay xe máy, ô tô lên vùng cao trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) bị ngập chia cắt.` },
                     { id: '2f_yard_2', text: 'Kê cao tủ lạnh, máy giặt, đồ điện tử ở tầng trệt và chuyển lương thực/nước uống lên tầng 2.' }
                 ],
                 doorstep: [
@@ -2367,7 +2557,7 @@
         }
 
         // =====================================================================
-        // 5. ĐIỀU HƯỚNG TAB, MÔ PHỎNG MỰC NƯỚC, CÒI BÁO ĐỘNG & CÁC MODAL
+        // 6. ĐIỀU HƯỚNG TAB, MÔ PHỎNG MỰC NƯỚC, CÒI BÁO ĐỘNG & CÁC MODAL
         // =====================================================================
         function switchTab(tabName) {
             document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
@@ -2464,45 +2654,44 @@
             }
             document.getElementById('autoSyncLabel').textContent = '30p/lần';
         }
-let sharedAudioCtx = null;
 
-function triggerEmergencyAlert(isSmsAction) {
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!sharedAudioCtx) {
-            sharedAudioCtx = new AudioCtx();
+        let sharedAudioCtx = null;
+
+        function triggerEmergencyAlert(isSmsAction) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!sharedAudioCtx) {
+                    sharedAudioCtx = new AudioCtx();
+                }
+                if (sharedAudioCtx.state === 'suspended') {
+                    sharedAudioCtx.resume();
+                }
+
+                const now = sharedAudioCtx.currentTime;
+                [0, 0.28, 0.56].forEach((offset, idx) => {
+                    const osc = sharedAudioCtx.createOscillator();
+                    const gain = sharedAudioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(idx === 2 ? 1050 : 820, now + offset);
+                    gain.gain.setValueAtTime(0.001, now + offset);
+                    gain.gain.exponentialRampToValueAtTime(0.6, now + offset + 0.03);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.22);
+                    osc.connect(gain);
+                    gain.connect(sharedAudioCtx.destination);
+                    osc.start(now + offset);
+                    osc.stop(now + offset + 0.24);
+                });
+            } catch (e) {}
+
+            const st = getActiveStation();
+            const flood = evaluateHouseholdFlood();
+            showPushBanner(
+                isSmsAction ? `Đã gửi SMS tới ${state.ownerPhone}` : `Còi báo động • ${flood.heroBadge}`,
+                `${st.name}: ${getStationLevel(st).toFixed(2)}m • ${flood.plainAdvice}`,
+                flood.color
+            );
         }
-        // Bắt buộc trên iPhone/iOS để mở khóa âm thanh
-        if (sharedAudioCtx.state === 'suspended') {
-            sharedAudioCtx.resume();
-        }
 
-        const now = sharedAudioCtx.currentTime;
-        // Phát 3 nhịp còi hú rõ hơn (dùng sóng triangle/sawtooth)
-        [0, 0.28, 0.56].forEach((offset, idx) => {
-            const osc = sharedAudioCtx.createOscillator();
-            const gain = sharedAudioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(idx === 2 ? 1050 : 820, now + offset);
-            gain.gain.setValueAtTime(0.001, now + offset);
-            gain.gain.exponentialRampToValueAtTime(0.6, now + offset + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.22);
-            osc.connect(gain);
-            gain.connect(sharedAudioCtx.destination);
-            osc.start(now + offset);
-            osc.stop(now + offset + 0.24);
-        });
-    } catch (e) {}
-
-    const st = getActiveStation();
-    const flood = evaluateHouseholdFlood();
-    showPushBanner(
-        isSmsAction ? `Đã gửi SMS tới ${state.ownerPhone}` : `Còi báo động • ${flood.heroBadge}`,
-        `${st.name}: ${getStationLevel(st).toFixed(2)}m • ${flood.plainAdvice}`,
-        flood.color
-    );
-}
-        
         function copySmsMessage() {
             const text = document.getElementById('smsMessagePreview').textContent;
             const ta = document.createElement('textarea');
