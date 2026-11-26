@@ -1,0 +1,2695 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#EBF3F0">
+    <title>Huế FloodGuard - Cảnh Báo Lũ Hộ Gia Đình (V1)</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet 1.9.4 GIS Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --forest-deep: #1B4D3E;
+            --forest-dark: #13382D;
+            --sage-soft: #EBF3F0;
+            --sage-tint: #DCE7E2;
+            --bg-main: #F4F7F6;
+            --safe-green: #16A34A;
+            --watch-yellow: #EAB308;
+            --yard-orange: #EA580C;
+            --danger-red: #DC2626;
+            --emergency-purple: #6B21A8;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+            background-color: #DCE7E2;
+            color: #0F172A;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .font-mono-num {
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* iOS Sonalog Card & Glassmorphism */
+        .sonalog-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.045);
+            border: 1px solid #DCE7E2;
+        }
+
+        .ios-glass {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        /* Custom Precision Range Slider (0.00m - 6.00m) */
+        input[type="range"].forest-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #16A34A 0%, #EAB308 25%, #EA580C 55%, #DC2626 75%, #6B21A8 100%);
+            outline: none;
+        }
+        input[type="range"].forest-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            border: 4px solid #1B4D3E;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            transition: transform 0.12s ease;
+        }
+        input[type="range"].forest-slider::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+
+        /* iOS Toggle Switch */
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .ios-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .ios-switch-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #CBD5E1;
+            transition: .25s;
+            border-radius: 999px;
+        }
+        .ios-switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+        }
+        .ios-switch input:checked + .ios-switch-slider {
+            background-color: #1B4D3E;
+        }
+        .ios-switch input:checked + .ios-switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Leaflet Overrides */
+        .leaflet-container {
+            width: 100%;
+            height: 100%;
+            background-color: #EBF3F0 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif !important;
+        }
+        .leaflet-div-icon {
+            background: transparent !important;
+            border: none !important;
+        }
+        .leaflet-control-attribution {
+            font-size: 9px !important;
+            background: rgba(255, 255, 255, 0.85) !important;
+            border-radius: 6px 0 0 0 !important;
+            padding: 1px 5px !important;
+        }
+
+        @keyframes pulseRadar {
+            0% { transform: scale(0.85); opacity: 0.75; }
+            70% { transform: scale(2.2); opacity: 0; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        .radar-pulse {
+            animation: pulseRadar 2s infinite ease-out;
+        }
+
+        @keyframes evacSlide {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-6px); }
+        }
+        .evac-arrow-anim {
+            animation: evacSlide 1.2s ease-in-out infinite;
+        }
+
+        .pt-safe {
+            padding-top: max(12px, env(safe-area-inset-top));
+        }
+        .pb-safe {
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-screen flex items-center justify-center">
+
+    <!-- ===================================================================== -->
+    <!-- KHUNG ỨNG DỤNG DI ĐỘNG iOS (FULL-BLEED MOBILE / 440PX BEZEL DESKTOP)  -->
+    <!-- ===================================================================== -->
+    <div id="appShell" class="relative w-full h-full sm:max-w-[440px] sm:h-[94dvh] sm:rounded-[42px] sm:border-[8px] sm:border-slate-900 sm:shadow-2xl bg-[#F4F7F6] flex flex-col overflow-hidden">
+
+        <!-- ================================================================= -->
+        <!-- THANH PUSH NOTIFICATION BANNER CHUẨN iOS (ẨN/HIỆN ĐỘNG)           -->
+        <!-- ================================================================= -->
+        <div id="iosPushBanner" class="hidden absolute top-3 left-3 right-3 z-[3500] ios-glass rounded-3xl p-3.5 shadow-2xl border border-[#1B4D3E]/25 transition-all duration-300">
+            <div class="flex items-start gap-3">
+                <div id="pushBannerIconBox" class="w-10 h-10 rounded-2xl bg-[#1B4D3E] text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#1B4D3E]">HUẾ FLOODGUARD • CẢNH BÁO</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">Vừa xong</span>
+                    </div>
+                    <div id="pushBannerTitle" class="text-[13px] font-extrabold text-slate-900 mt-0.5 truncate">Cập nhật mực nước</div>
+                    <p id="pushBannerBody" class="text-xs text-slate-600 leading-snug mt-0.5">Trạm Kim Long đang ở mức 0.00m.</p>
+                </div>
+                <button onclick="hidePushBanner()" class="p-1 rounded-full text-slate-400 hover:text-slate-700" aria-label="Đóng thông báo">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TOP iOS HEADER + VECTOR SHIELD LOGO + GIỚI THIỆU + CÒI BÁO ĐỘNG   -->
+        <!-- ================================================================= -->
+        <header class="px-4 pt-safe pb-2.5 bg-[#EBF3F0]/95 backdrop-blur-md flex items-center justify-between flex-shrink-0 z-[1050] border-b border-[#DCE7E2]">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <!-- Vector SVG Shield Logo (Trường Tiền Bridge + Perfume River + 3 Warning Arcs) -->
+                <div class="w-10 h-11 flex-shrink-0">
+                    <svg viewBox="0 0 200 226" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <clipPath id="headerShieldClip">
+                                <path d="M100 18 L174 44 V112 C174 162 142 192 100 206 C58 192 26 162 26 112 V44 Z" />
+                            </clipPath>
+                        </defs>
+                        <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="#FFFFFF" />
+                        <g clip-path="url(#headerShieldClip)">
+                            <!-- 3-arc orange warning signal -->
+                            <path d="M80 84 A28 28 0 0 1 120 84" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                            <path d="M68 72 A44 44 0 0 1 132 72" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                            <path d="M56 60 A60 60 0 0 1 144 60" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                            <!-- Purple Trường Tiền truss bridge -->
+                            <path d="M22 122 Q100 84 178 122" fill="none" stroke="#4A148C" stroke-width="7"/>
+                            <line x1="22" y1="129" x2="178" y2="129" stroke="#4A148C" stroke-width="8"/>
+                            <path d="M36 129 L45 113 L55 129 L65 108 L76 129 L88 104 L100 129 L112 104 L124 129 L135 108 L145 129 L155 113 L164 129" fill="none" stroke="#4A148C" stroke-width="4.5" stroke-linejoin="round"/>
+                            <path d="M50 129 L47 149 H63 L60 129 Z" fill="#4A148C"/>
+                            <path d="M140 129 L137 149 H153 L150 129 Z" fill="#4A148C"/>
+                            <!-- Teal Perfume River waves -->
+                            <path d="M18 143 Q45 136 72 144 T128 144 T182 142 V215 H18 Z" fill="#0E7490"/>
+                            <path d="M18 157 Q48 150 78 158 T138 158 T182 156 V215 H18 Z" fill="#14B8A6" opacity="0.55"/>
+                        </g>
+                        <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="none" stroke="#4A148C" stroke-width="10" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[15px] font-extrabold tracking-tight text-[#1B4D3E] truncate">Huế FloodGuard</span>
+                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-[#1B4D3E] text-white flex-shrink-0">V1</span>
+                    </div>
+                    <p id="headerLiveMeta" class="text-[11px] font-semibold text-slate-600 truncate">
+                        Kim Long: 0.00m • Hue-S 30p/lần
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+                <button onclick="openAboutModal()" class="px-2.5 py-1.5 rounded-full bg-white hover:bg-[#DCE7E2] text-[#1B4D3E] text-[11px] font-extrabold flex items-center gap-1 shadow-2xs border border-[#DCE7E2] transition active:scale-95">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                    <span>Giới thiệu</span>
+                </button>
+                <button onclick="triggerEmergencyAlert(false)" class="w-8 h-8 rounded-full bg-white text-[#1B4D3E] flex items-center justify-center shadow-2xs border border-[#DCE7E2] active:scale-95 transition" title="Phát còi báo động">
+                    <i data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- MAIN VIEWPORT: 5 TABS (CẢNH BÁO | BẢN ĐỒ LŨ | NHU CẦU | THẺ KHẨN CẤP | CÀI ĐẶT) -->
+        <!-- ================================================================= -->
+        <main class="flex-1 relative overflow-hidden">
+
+            <!-- ============================================================= -->
+            <!-- TAB 1: CẢNH BÁO (HERO + 1 SƠ ĐỒ DUY NHẤT + KẾ HOẠCH ĐƯỜNG + TRẠM) -->
+            <!-- ============================================================= -->
+            <section id="view-alert" class="tab-view absolute inset-0 overflow-y-auto no-scrollbar px-4 pt-3 pb-24 space-y-3.5">
+
+                <!-- 1. HERO STATUS CARD -->
+                <div id="heroStatusCard" class="sonalog-card p-4 space-y-3 border-t-[5px]" style="border-top-color: #16A34A;">
+                    <!-- Hàng định danh chủ hộ + huy hiệu loại nhà + tốc độ nước lên -->
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0 space-y-0.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span id="heroOwnerName" class="text-sm font-extrabold text-slate-900 truncate">Hộ Trương Za Za</span>
+                                <span id="heroHouseTypePill" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E]">Nhà 2 tầng</span>
+                                <span id="heroSpeedTag" class="px-2 py-0.5 rounded-full text-[10px] font-mono-num font-extrabold bg-slate-100 text-slate-700">+0 cm/h</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-[11px] text-slate-500 truncate">
+                                <i data-lucide="map-pin" class="w-3 h-3 text-[#1B4D3E] flex-shrink-0"></i>
+                                <span id="heroAddress" class="truncate">5/21 Nguyễn Bỉnh Khiêm - Phú Xuân, TP. Huế</span>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('settings')" class="px-2.5 py-1.5 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] text-[11px] font-extrabold flex-shrink-0 transition active:scale-95">
+                            Sửa mốc nhà
+                        </button>
+                    </div>
+
+                    <!-- Khung cảnh báo màu cỡ lớn + khuyến nghị trực diện -->
+                    <div id="heroAlertBox" class="p-3.5 rounded-2xl border bg-emerald-50/90 border-emerald-200 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span id="heroStatusBadge" class="px-3 py-1 rounded-xl text-white text-xs sm:text-[13px] font-black tracking-wide uppercase shadow-2xs" style="background-color: #16A34A;">
+                                AN TOÀN
+                            </span>
+                            <span id="heroOfficialBadge" class="px-2 py-0.5 rounded-lg bg-white/90 text-[11px] font-extrabold text-slate-800 border border-slate-200/80">
+                                Dưới BĐ I
+                            </span>
+                        </div>
+                        <div id="heroPlainAdvice" class="text-[14px] font-extrabold text-slate-900 leading-snug pt-0.5">
+                            Còn cách nền nhà +434 cm • Sân và nền nhà khô ráo hoàn toàn.
+                        </div>
+                        <div id="heroSubActionNote" class="text-xs font-medium text-slate-700 leading-snug">
+                            Theo dõi bản tin mưa lũ Hue-S; kiểm tra sẵn sàng túi thoát hiểm gia đình.
+                        </div>
+                    </div>
+
+                    <!-- 3 Chỉ số cốt lõi -->
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="p-2.5 rounded-2xl bg-[#F4F7F6] border border-slate-200/70">
+                            <div id="heroStationLabel" class="text-[10px] font-extrabold text-slate-500 uppercase truncate">Trạm Kim Long</div>
+                            <div class="text-xl font-black font-mono-num text-[#1B4D3E] mt-0.5"><span id="heroRiverVal">0.00</span>m</div>
+                            <div id="heroBd3Diff" class="text-[10px] font-bold text-slate-500 mt-0.5">Dưới BĐ III 350cm</div>
+                        </div>
+
+                        <div class="p-2.5 rounded-2xl bg-[#F4F7F6] border border-slate-200/70">
+                            <div class="text-[10px] font-extrabold text-slate-500 uppercase">Mốc vào sân</div>
+                            <div class="text-xl font-black font-mono-num text-slate-800 mt-0.5"><span id="heroYardVal">3.50</span>m</div>
+                            <div id="heroYardDiff" class="text-[10px] font-extrabold text-emerald-700 mt-0.5">Cách sân +350cm</div>
+                        </div>
+
+                        <div class="p-2.5 rounded-2xl bg-[#EBF3F0]/80 border border-[#1B4D3E]/20">
+                            <div class="text-[10px] font-extrabold text-[#1B4D3E] uppercase">Mốc nền nhà</div>
+                            <div class="text-xl font-black font-mono-num text-[#1B4D3E] mt-0.5"><span id="heroFloorVal">4.34</span>m</div>
+                            <div id="heroFloorDiff" class="text-[10px] font-extrabold text-[#1B4D3E] mt-0.5">Cách nền +434cm</div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Nút hành động khẩn cấp một chạm -->
+                    <div class="grid grid-cols-4 gap-1.5 pt-0.5">
+                        <button onclick="triggerEmergencyAlert(false)" class="py-2 px-1 rounded-2xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] flex flex-col items-center justify-center gap-1 transition active:scale-95">
+                            <i data-lucide="siren" class="w-4 h-4"></i>
+                            <span class="text-[10px] font-extrabold leading-tight text-center">Còi báo động</span>
+                        </button>
+                        <button onclick="openNativeSmsApp()" class="py-2 px-1 rounded-2xl bg-[#1B4D3E] hover:bg-[#13382D] text-white flex flex-col items-center justify-center gap-1 transition active:scale-95">
+                            <i data-lucide="message-square-warning" class="w-4 h-4"></i>
+                            <span class="text-[10px] font-extrabold leading-tight text-center">Gửi SMS</span>
+                        </button>
+                        <a href="tel:112" class="py-2 px-1 rounded-2xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 flex flex-col items-center justify-center gap-1 transition active:scale-95">
+                            <i data-lucide="phone-call" class="w-4 h-4"></i>
+                            <span class="text-[10px] font-extrabold leading-tight text-center">Gọi 112/115</span>
+                        </a>
+                        <button onclick="switchTab('map'); showEvacRoute();" class="py-2 px-1 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 flex flex-col items-center justify-center gap-1 transition active:scale-95">
+                            <i data-lucide="navigation" class="w-4 h-4"></i>
+                            <span class="text-[10px] font-extrabold leading-tight text-center">Đường sơ tán</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. DUY NHẤT 1 THẺ MẶT CẮT KIẾN TRÚC NGÔI NHÀ (TỰ ĐỘNG THEO NHÀ 1 TẦNG / 2 TẦNG) -->
+                <div class="sonalog-card p-3.5 space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div class="min-w-0">
+                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-800 truncate">Sơ đồ cao độ ngôi nhà</h2>
+                                <span id="diagramHouseTypeBadge" class="inline-block text-[10px] font-extrabold text-[#1B4D3E]">Nhà 2 tầng • Có tầng trên</span>
+                            </div>
+                        </div>
+                        <button onclick="toggleHouseTypeQuick()" class="px-2.5 py-1 rounded-full bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] text-[10.5px] font-extrabold border border-[#1B4D3E]/20 flex-shrink-0 active:scale-95 transition">
+                            Đổi loại nhà
+                        </button>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#F4F7F6] border border-slate-200/80 p-2 overflow-hidden">
+                        <svg id="houseCrossSectionSvg" viewBox="0 0 380 218" class="w-full h-52 block">
+                            <defs>
+                                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#EBF3F0"/>
+                                    <stop offset="100%" stop-color="#F8FAFC"/>
+                                </linearGradient>
+                                <clipPath id="waterClipBox">
+                                    <rect x="34" y="14" width="336" height="190" rx="8"/>
+                                </clipPath>
+                            </defs>
+
+                            <!-- Nền trời & thước đo cao độ 0m -> 6m -->
+                            <rect x="0" y="0" width="380" height="218" rx="12" fill="url(#skyGrad)"/>
+                            <line x1="30" y1="18" x2="30" y2="202" stroke="#94A3B8" stroke-width="1.5"/>
+
+                            <!-- Vạch chia thước 6m -> 0m -->
+                            <text x="24" y="24" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">6m</text>
+                            <text x="24" y="54" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">5m</text>
+                            <text x="24" y="84" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">4m</text>
+                            <text x="24" y="114" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">3m</text>
+                            <text x="24" y="144" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">2m</text>
+                            <text x="24" y="174" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">1m</text>
+                            <text x="24" y="203" font-size="8.2" font-weight="800" fill="#475569" text-anchor="end">0m</text>
+
+                            <!-- Đường ngoài & Cổng -->
+                            <rect x="34" y="174" width="44" height="30" fill="#CBD5E1"/>
+                            <text x="56" y="193" font-size="7.5" font-weight="800" fill="#475569" text-anchor="middle">Đường</text>
+                            <rect x="76" y="128" width="5" height="46" fill="#64748B" rx="1"/>
+
+                            <!-- Sân trước (y=158) & Nền móng nhà (y=132) -->
+                            <rect x="81" y="158" width="93" height="46" fill="#E2E8F0"/>
+                            <rect x="174" y="132" width="194" height="72" fill="#CBD5E1"/>
+
+                            <!-- Bậc tam cấp -->
+                            <rect x="166" y="132" width="8" height="26" fill="#94A3B8"/>
+                            <rect x="158" y="141" width="8" height="17" fill="#94A3B8"/>
+                            <rect x="150" y="150" width="8" height="8" fill="#94A3B8"/>
+
+                            <!-- ================================================= -->
+                            <!-- MÔ HÌNH 1: NHÀ 1 TẦNG (TẦNG TRỆT - MÁI NGÓI ĐỎ)   -->
+                            <!-- ================================================= -->
+                            <g id="svgModel1Floor" class="hidden">
+                                <!-- Banner cảnh báo trên mái -->
+                                <rect x="168" y="16" width="202" height="17" rx="5" fill="#FEF3C7" stroke="#DC2626" stroke-width="1.2"/>
+                                <text x="269" y="27.5" font-size="7.4" font-weight="900" fill="#B91C1C" text-anchor="middle">NHÀ 1 TẦNG • KHÔNG CÓ TẦNG TRÊN TRÚ ẨN</text>
+
+                                <!-- Mái ngói đỏ terracotta (#B91C1C) -->
+                                <polygon points="162,76 271,38 378,76" fill="#B91C1C"/>
+                                <line x1="186" y1="67" x2="356" y2="67" stroke="#FCA5A5" stroke-width="1" stroke-dasharray="6 4" opacity="0.7"/>
+                                <line x1="212" y1="57" x2="330" y2="57" stroke="#FCA5A5" stroke-width="1" stroke-dasharray="6 4" opacity="0.7"/>
+
+                                <!-- Thân nhà 1 tầng duy nhất -->
+                                <rect x="174" y="76" width="192" height="56" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+                                <!-- Cửa chính & cửa sổ -->
+                                <rect x="184" y="96" width="20" height="36" rx="1.5" fill="#FEF3C7" stroke="#D97706" stroke-width="1.2"/>
+                                <rect x="218" y="94" width="26" height="18" rx="2" fill="#EBF3F0" stroke="#1B4D3E" stroke-width="1.2"/>
+                                <line x1="231" y1="94" x2="231" y2="112" stroke="#1B4D3E" stroke-width="1"/>
+                                <!-- Tủ lạnh & Đồ đạc -->
+                                <rect x="262" y="99" width="16" height="33" rx="1.5" fill="#E2E8F0" stroke="#475569" stroke-width="1.1"/>
+                                <rect x="288" y="114" width="24" height="18" rx="1.5" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.1"/>
+                                <text x="338" y="108" font-size="7.5" font-weight="800" fill="#B91C1C" text-anchor="middle">TẦNG TRỆT</text>
+                                <text x="338" y="119" font-size="6.8" font-weight="700" fill="#64748B" text-anchor="middle">(1 tầng)</text>
+
+                                <!-- Mũi tên sơ tán sớm (hiện khi nước >= 1.80m / BĐ II / gần sân) -->
+                                <g id="svg1FloorEvacArrow" class="hidden">
+                                    <g class="evac-arrow-anim">
+                                        <rect x="40" y="90" width="132" height="18" rx="5" fill="#DC2626"/>
+                                        <text x="106" y="101.5" font-size="6.5" font-weight="900" fill="#FFFFFF" text-anchor="middle">SƠ TÁN SỚM TRƯỚC KHI NGẬP ĐƯỜNG</text>
+                                        <path d="M174 118 L112 118" stroke="#DC2626" stroke-width="3" stroke-linecap="round"/>
+                                        <polygon points="112,113 102,118 112,123" fill="#DC2626"/>
+                                    </g>
+                                </g>
+                            </g>
+
+                            <!-- ================================================= -->
+                            <!-- MÔ HÌNH 2: NHÀ 2 TẦNG (CÓ TẦNG TRÊN KIÊN CỐ)      -->
+                            <!-- ================================================= -->
+                            <g id="svgModel2Floor">
+                                <!-- Mái nhà 2 tầng màu xanh rừng thông (#1B4D3E) -->
+                                <polygon points="164,46 271,14 376,46" fill="#1B4D3E"/>
+                                <!-- Khung nhà 2 tầng -->
+                                <rect x="174" y="46" width="192" height="86" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+                                <!-- Tầng 2 sáng đèn an toàn -->
+                                <rect x="175" y="47" width="190" height="41" fill="#ECFDF5"/>
+                                <circle cx="270" cy="53" r="3" fill="#F59E0B"/>
+                                <line x1="174" y1="89" x2="366" y2="89" stroke="#64748B" stroke-width="1.8"/>
+                                <text x="270" y="65" font-size="7.6" font-weight="900" fill="#15803D" text-anchor="middle">TẦNG 2 • KHU VỰC TRÚ ẨN AN TOÀN</text>
+                                <!-- Cửa sổ tầng 2 & giường đồ -->
+                                <rect x="186" y="72" width="28" height="15" rx="2" fill="#BBF7D0" stroke="#16A34A" stroke-width="1.1"/>
+                                <rect x="224" y="70" width="22" height="17" rx="2" fill="#FEF3C7" stroke="#D97706" stroke-width="1.1"/>
+                                <!-- Cầu thang bộ nội bộ -->
+                                <path d="M326 132 L352 89" stroke="#64748B" stroke-width="3.2" stroke-linecap="round"/>
+                                <path d="M332 132 L358 89" stroke="#94A3B8" stroke-width="1.8" stroke-dasharray="3 3"/>
+                                <!-- Tầng 1: cửa chính & cửa sổ -->
+                                <rect x="184" y="99" width="18" height="33" rx="1.5" fill="#FEF3C7" stroke="#D97706" stroke-width="1.2"/>
+                                <rect x="214" y="98" width="24" height="16" rx="2" fill="#EBF3F0" stroke="#1B4D3E" stroke-width="1.1"/>
+                                <rect x="252" y="102" width="15" height="30" rx="1.5" fill="#E2E8F0" stroke="#475569" stroke-width="1.1"/>
+                                <rect x="276" y="114" width="22" height="18" rx="1.5" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.1"/>
+                            </g>
+
+                            <!-- Đường gióng Mốc nền nhà (y=132) -->
+                            <line x1="34" y1="132" x2="372" y2="132" stroke="#DC2626" stroke-width="1.4" stroke-dasharray="4 3"/>
+                            <rect x="234" y="135" width="132" height="14" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.8"/>
+                            <text id="svgFloorLabel" x="300" y="144.5" font-size="8" font-weight="800" fill="#DC2626" text-anchor="middle">Nền nhà: 4.34m</text>
+
+                            <!-- Đường gióng Mốc vào sân (y=158) -->
+                            <line x1="34" y1="158" x2="174" y2="158" stroke="#EA580C" stroke-width="1.4" stroke-dasharray="4 3"/>
+                            <rect x="82" y="161" width="88" height="13" rx="4" fill="#FFF7ED"/>
+                            <text id="svgYardLabel" x="126" y="170" font-size="7.8" font-weight="800" fill="#C2410C" text-anchor="middle">Mặt sân: 3.50m</text>
+
+                            <!-- Khối nước dâng theo thời gian thực (0.00m -> 6.00m) -->
+                            <g clip-path="url(#waterClipBox)">
+                                <rect id="svgWaterFill" x="34" y="200" width="336" height="4" fill="#16A34A" fill-opacity="0.34"/>
+                                <line id="svgWaterSurface" x1="34" y1="200" x2="370" y2="200" stroke="#16A34A" stroke-width="2.6"/>
+                            </g>
+
+                            <!-- Nhãn mực nước nổi -->
+                            <g id="svgWaterTagGroup">
+                                <rect id="svgWaterPill" x="38" y="180" width="104" height="16" rx="8" fill="#16A34A"/>
+                                <text id="svgWaterPillText" x="90" y="191" font-size="8.5" font-weight="800" fill="#FFFFFF" text-anchor="middle">Trạm: 0.00m</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[10.5px] px-0.5 gap-2">
+                        <span id="svgHouseCaption" class="font-bold text-slate-600 truncate">Nhà 2 tầng: Có tầng 2 kiên cố trú ẩn an toàn</span>
+                        <span id="etaCountdownBadge" class="font-extrabold text-[#1B4D3E] bg-[#EBF3F0] px-2 py-0.5 rounded-full flex-shrink-0">Dưới BĐ I • Chưa ngập</span>
+                    </div>
+                </div>
+
+                <!-- 3. THẺ KẾ HOẠCH DI CHUYỂN & CHIA CẮT CUNG ĐƯỜNG TẠI HUẾ -->
+                <div id="evacPlanCard" class="sonalog-card p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="route" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div class="min-w-0">
+                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-900 truncate">Kế hoạch di chuyển &amp; Chia cắt đường</h2>
+                                <p id="evacPlanModeSub" class="text-[10.5px] font-bold text-[#1B4D3E]">Chế độ: Nhà 2 tầng (Ưu tiên dời xe &amp; rút lên tầng 2)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Khung cảnh báo khẩn cấp SƠ TÁN SỚM riêng cho Nhà 1 tầng -->
+                    <div id="earlyEvac1FloorBox" class="hidden p-3.5 rounded-2xl bg-red-600 text-white space-y-2 shadow-sm">
+                        <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-300 flex-shrink-0"></i>
+                            <span>CẢNH BÁO SƠ TÁN SỚM • NHÀ 1 TẦNG</span>
+                        </div>
+                        <p class="text-[11.5px] leading-snug text-red-50 font-medium">
+                            Nhà 1 tầng không có tầng trên trú ẩn. Hãy đưa người già, trẻ nhỏ và phương tiện di chuyển <strong>NGAY LÚC NÀY</strong> trước khi Đập Đá, Bến Nghé và các tuyến đường ngoài bị ngập sâu làm mất lối thoát!
+                        </p>
+                        <button onclick="switchTab('map'); showEvacRoute();" class="w-full py-2 px-3 rounded-xl bg-white text-red-700 text-xs font-black flex items-center justify-center gap-1.5 active:scale-98 transition">
+                            <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+                            <span>Mở bản đồ đường sơ tán tránh ngập</span>
+                        </button>
+                    </div>
+
+                    <!-- Khung hướng dẫn cho Nhà 2 tầng khi ngoài đường bắt đầu chia cắt -->
+                    <div id="retreat2FloorBox" class="hidden p-3 rounded-2xl bg-[#EBF3F0] border border-[#1B4D3E]/25 text-xs text-slate-800 space-y-1">
+                        <div class="font-extrabold text-[#1B4D3E] flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-4 h-4 flex-shrink-0"></i>
+                            <span>Phương án an toàn cho Nhà 2 tầng</span>
+                        </div>
+                        <p id="retreat2FloorText" class="text-[11.5px] leading-snug text-slate-700">
+                            Nhiều tuyến đường ngoài đã ngập sâu chia cắt. Không mạo hiểm lội nước đi ra ngoài; hãy kê cao thiết bị điện, ngắt aptomat tầng trệt và rút toàn bộ gia đình lên tầng 2 trú ẩn.
+                        </p>
+                    </div>
+
+                    <!-- Danh sách trạng thái 4 mốc chia cắt cung đường Huế -->
+                    <div id="roadCutoffList" class="space-y-1.5 text-[11px]"></div>
+                </div>
+
+                <!-- 4. BẢNG 4 TRẠM THỦY VĂN HUẾ & BỘ MÔ PHỎNG MỰC NƯỚC (0.00M – 6.00M) -->
+                <div class="sonalog-card p-3.5 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center">
+                                <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div>
+                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-800">Trạm đo &amp; Mô phỏng Hue-S</h2>
+                                <p id="lastSyncTimestamp" class="text-[10px] text-slate-500">Tự động cập nhật 30 phút/lần</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="applyWaterPreset(0.00, 0)" class="px-2 py-1 rounded-full bg-[#F4F7F6] hover:bg-[#EBF3F0] text-[#1B4D3E] text-[10.5px] font-extrabold border border-slate-200 transition active:scale-95">
+                                Về 0.00m
+                            </button>
+                            <button id="btnAutoSync" onclick="toggleAutoSync()" class="px-2.5 py-1 rounded-full bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] text-[10.5px] font-extrabold flex items-center gap-1 border border-[#1B4D3E]/20 transition">
+                                <span id="autoSyncDot" class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                                <span id="autoSyncLabel">30p/lần</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Thẻ Trạm Quan Trắc -->
+                    <div id="stationsGrid" class="grid grid-cols-2 gap-2"></div>
+
+                    <!-- Thanh trượt mô phỏng mực nước (0.00m - 6.00m) + Nút tinh chỉnh -->
+                    <div class="pt-1 space-y-2.5 border-t border-slate-100">
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="font-bold text-slate-700">Kéo thử mực nước Sông Hương:</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="stepWaterLevel(-0.05)" class="px-2.5 py-1 rounded-lg bg-[#F4F7F6] hover:bg-[#EBF3F0] border border-slate-200 font-mono-num font-extrabold text-slate-800 active:scale-95">-0.05</button>
+                                <span class="font-mono-num font-extrabold text-[#1B4D3E] text-xs min-w-[54px] text-center" id="sliderKimLongReadout">0.00 m</span>
+                                <button onclick="stepWaterLevel(0.05)" class="px-2.5 py-1 rounded-lg bg-[#F4F7F6] hover:bg-[#EBF3F0] border border-slate-200 font-mono-num font-extrabold text-slate-800 active:scale-95">+0.05</button>
+                            </div>
+                        </div>
+                        <input type="range" id="waterLevelSlider" min="0.00" max="6.00" step="0.01" value="0.00" class="forest-slider" oninput="onSliderWaterInput(this.value)">
+
+                        <!-- 7 Nút chọn nhanh mốc lịch sử -->
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button onclick="applyWaterPreset(0.00, 0)" class="py-1.5 px-1 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[9.5px] font-extrabold text-[#1B4D3E] border border-[#1B4D3E]/20 leading-tight">
+                                Bình thường<br><span class="font-mono-num">0.00m</span>
+                            </button>
+                            <button onclick="applyWaterPreset(1.80, 6)" class="py-1.5 px-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-[9.5px] font-extrabold text-amber-900 border border-amber-200 leading-tight">
+                                Tràn Đập Đá<br><span class="font-mono-num">1.80m</span>
+                            </button>
+                            <button onclick="applyWaterPreset(3.50, 10)" class="py-1.5 px-1 rounded-xl bg-orange-50 hover:bg-orange-100 text-[9.5px] font-extrabold text-orange-800 border border-orange-200 leading-tight">
+                                BĐ III Hương<br><span class="font-mono-num">3.50m</span>
+                            </button>
+                            <button onclick="applyWaterPreset(4.34, 12)" class="py-1.5 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[9.5px] font-extrabold text-slate-800 border border-slate-300 leading-tight">
+                                15/11/2023<br><span class="font-mono-num">4.34m</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="applyWaterPreset(5.05, 16)" class="py-1.5 px-1 rounded-xl bg-red-50 hover:bg-red-100 text-[9.5px] font-extrabold text-red-700 border border-red-200 leading-tight">
+                                Lũ 27/10/2025<br><span class="font-mono-num">5.05m</span>
+                            </button>
+                            <button onclick="applyWaterPreset(5.06, 16)" class="py-1.5 px-1 rounded-xl bg-red-50 hover:bg-red-100 text-[9.5px] font-extrabold text-red-800 border border-red-200 leading-tight">
+                                Phú Ốc 03/11/25<br><span class="font-mono-num">5.31m</span>
+                            </button>
+                            <button onclick="applyWaterPreset(5.81, 18)" class="py-1.5 px-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-[9.5px] font-extrabold text-purple-900 border border-purple-200 leading-tight">
+                                Lũ lịch sử 1999<br><span class="font-mono-num">5.81m</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. VIỆC CẦN LÀM NGAY TẠI NHÀ (CHẠM ĐÁNH DẤU ĐƯỢC) + SMS TỰ ĐỘNG -->
+                <div class="sonalog-card p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div class="min-w-0">
+                                <h2 class="text-sm font-extrabold text-slate-900 truncate">Việc cần làm ngay tại nhà</h2>
+                                <p id="checklistProgressLabel" class="text-[10px] font-bold text-[#1B4D3E]">Chạm để đánh dấu đã hoàn thành</p>
+                            </div>
+                        </div>
+                        <button onclick="openNativeSmsApp()" class="px-2.5 py-1.5 rounded-full bg-[#1B4D3E] text-white text-[10px] font-extrabold flex items-center gap-1 flex-shrink-0 active:scale-95 transition">
+                            <i data-lucide="send" class="w-3 h-3"></i> Mở SMS gửi
+                        </button>
+                    </div>
+
+                    <div id="householdChecklistContainer" class="space-y-2 text-xs"></div>
+
+                    <!-- Khung xem trước tin nhắn SMS cảnh báo -->
+                    <div class="p-3 rounded-2xl bg-[#F4F7F6] border border-slate-200/80 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#1B4D3E]">Nội dung tin nhắn SMS tự động</span>
+                            <button onclick="copySmsMessage()" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-extrabold text-slate-700 hover:text-[#1B4D3E] flex items-center gap-1">
+                                <i data-lucide="copy" class="w-3 h-3"></i> Sao chép
+                            </button>
+                        </div>
+                        <p id="smsMessagePreview" class="text-[11px] text-slate-700 leading-relaxed select-text"></p>
+                    </div>
+                </div>
+
+                <!-- 6. BẢNG TRA CỨU CẤP BÁO ĐỘNG & HỒ CHỨA THƯỢNG NGUỒN -->
+                <details class="sonalog-card p-4 group">
+                    <summary class="flex items-center justify-between cursor-pointer list-none">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center">
+                                <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <span class="text-xs font-extrabold text-slate-900">Bảng cấp BĐ &amp; Ngưỡng tràn hồ thủy điện Huế</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180"></i>
+                    </summary>
+
+                    <div class="pt-3 space-y-3 text-[11px]">
+                        <div class="overflow-hidden rounded-2xl border border-slate-200">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-[#1B4D3E] text-white text-[10px]">
+                                        <th class="py-2 px-2.5 font-extrabold">Trạm / Tuyến sông</th>
+                                        <th class="py-2 px-1.5 text-center font-extrabold bg-amber-500 text-slate-950">BĐ I</th>
+                                        <th class="py-2 px-1.5 text-center font-extrabold bg-orange-500 text-white">BĐ II</th>
+                                        <th class="py-2 px-1.5 text-center font-extrabold bg-red-600 text-white">BĐ III</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 bg-white font-mono-num">
+                                    <tr>
+                                        <td class="py-2 px-2.5 font-sans">
+                                            <div class="font-extrabold text-slate-900">Kim Long • Dã Viên</div>
+                                            <div class="text-[10px] text-slate-500">Sông Hương (Đập Đá: +1.80m)</div>
+                                        </td>
+                                        <td class="py-2 px-1.5 text-center font-extrabold text-amber-800 bg-amber-50/60">1.00m</td>
+                                        <td class="py-2 px-1.5 text-center font-extrabold text-orange-800 bg-orange-50/60">2.00m</td>
+                                        <td class="py-2 px-1.5 text-center font-extrabold text-red-700 bg-red-50/60">3.50m</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 px-2.5 font-sans">
+                                            <div class="font-extrabold text-slate-900">Phú Ốc • Phong Bình</div>
+                                            <div class="text-[10px] text-slate-500">Sông Bồ &amp; Sông Ô Lâu</div>
+                                        </td>
+                                        <td class="py-2 px-1.5 text-center font-extrabold text-amber-800 bg-amber-50/60">1.50m</td>
+                                        <td class="py-2 px-1.5 text-center font-extrabold text-orange-800 bg-orange-50/60">3.00m</td>
+                                        <td class="py-2 px-1.5 text-center font-extrabold text-red-700 bg-red-50/60">4.50m</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                            <div class="bg-[#F4F7F6] p-2 rounded-xl border border-slate-200/70">
+                                <div class="font-extrabold text-slate-900">Hồ Tả Trạch</div>
+                                <div class="font-mono-num font-extrabold text-[#1B4D3E] mt-0.5">Tràn: +37.0m</div>
+                                <div class="font-mono-num text-[9px] text-slate-500">MNDBT: +45.0m</div>
+                            </div>
+                            <div class="bg-[#F4F7F6] p-2 rounded-xl border border-slate-200/70">
+                                <div class="font-extrabold text-slate-900">TĐ Bình Điền</div>
+                                <div class="font-mono-num font-extrabold text-[#1B4D3E] mt-0.5">Tràn: +73.0m</div>
+                                <div class="font-mono-num text-[9px] text-slate-500">MNDBT: +85.0m</div>
+                            </div>
+                            <div class="bg-[#F4F7F6] p-2 rounded-xl border border-slate-200/70">
+                                <div class="font-extrabold text-slate-900">TĐ Hương Điền</div>
+                                <div class="font-mono-num font-extrabold text-[#1B4D3E] mt-0.5">Tràn: +42.75m</div>
+                                <div class="font-mono-num text-[9px] text-slate-500">MNDBT: +58.0m</div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ============================================================= -->
+            <!-- TAB 2: BẢN ĐỒ LŨ GIS HUẾ & DẪN ĐƯỜNG SƠ TÁN AN TOÀN           -->
+            <!-- ============================================================= -->
+            <section id="view-map" class="tab-view hidden absolute inset-0 flex flex-col">
+                <div id="hueGisMap" class="w-full h-full z-0"></div>
+
+                <!-- Banner hướng dẫn chạm bản đồ đặt vị trí nhà -->
+                <div id="pinModeBanner" class="hidden absolute top-3 left-3 right-3 z-[1100] bg-[#1B4D3E] text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5 text-xs">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-amber-400 animate-bounce flex-shrink-0"></i>
+                        <div>
+                            <div class="font-extrabold">Chạm trực tiếp vào vị trí nhà bạn</div>
+                            <div class="text-emerald-200 text-[11px]">Hoặc kéo ghim "Nhà tôi" đến đúng hẻm/số nhà</div>
+                        </div>
+                    </div>
+                    <button onclick="togglePinMode(false)" class="px-3 py-1.5 rounded-xl bg-white/15 text-xs font-bold">Xong</button>
+                </div>
+
+                <!-- Thanh chọn khu vực Huế & Công cụ GIS nổi phía trên -->
+                <div id="mapTopControls" class="absolute top-3 left-3 right-3 z-[950] ios-glass rounded-3xl p-3 shadow-lg border border-white space-y-2">
+                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                        <button onclick="jumpToNeighborhood(0)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-[#1B4D3E] text-white text-[11px] font-bold whitespace-nowrap">Đường Nguyễn Huệ</button>
+                        <button onclick="jumpToNeighborhood(1)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap">Phường Kim Long</button>
+                        <button onclick="jumpToNeighborhood(2)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap">Phường Vỹ Dạ</button>
+                        <button onclick="jumpToNeighborhood(3)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap">Đập Đá - Lê Lợi</button>
+                        <button onclick="jumpToNeighborhood(4)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap">Phường Phú Hậu</button>
+                        <button onclick="jumpToNeighborhood(5)" class="neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap">Quảng Điền - Sông Bồ</button>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-1.5 text-[11px] font-bold">
+                        <button onclick="togglePinMode(true)" class="px-2.5 py-1.5 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] flex items-center gap-1 whitespace-nowrap">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Ghim nhà tôi
+                        </button>
+                        <button onclick="toggleFloodLayer()" id="btnFloodLayer" class="px-2.5 py-1.5 rounded-xl bg-[#1B4D3E] text-white flex items-center gap-1 whitespace-nowrap">
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i> Vùng ngập
+                        </button>
+                        <button onclick="locateMyGPS()" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center gap-1 whitespace-nowrap">
+                            <i data-lucide="locate-fixed" class="w-3.5 h-3.5 text-[#1B4D3E]"></i> GPS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Thẻ lộ trình sơ tán an toàn & trạng thái ngôi nhà phía dưới bản đồ -->
+                <div class="absolute bottom-24 left-3 right-3 z-[950] space-y-2">
+                    <div id="evacRouteCard" class="hidden ios-glass rounded-3xl p-3.5 shadow-xl border border-[#1B4D3E]/25 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-7 h-7 rounded-xl bg-[#1B4D3E] text-white flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+                                </span>
+                                <div class="min-w-0">
+                                    <div class="text-[10px] font-extrabold uppercase text-[#1B4D3E]">Lộ trình sơ tán tránh ngập</div>
+                                    <div id="evacShelterTitle" class="text-xs font-extrabold text-slate-900 truncate">Trường ĐH Sư phạm - Đại học Huế (34 Lê Lợi)</div>
+                                </div>
+                            </div>
+                            <button onclick="clearEvacRoute()" class="p-1 rounded-full bg-slate-200/80 text-slate-600 flex-shrink-0" aria-label="Đóng lộ trình">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-1">
+                            <button onclick="selectShelter(0)" class="shelter-btn py-1 px-1.5 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold truncate">ĐH Sư phạm Huế</button>
+                            <button onclick="selectShelter(1)" class="shelter-btn py-1 px-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold truncate">BV Trung ương Huế</button>
+                            <button onclick="selectShelter(2)" class="shelter-btn py-1 px-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold truncate">Đồi Đàn Nam Giao</button>
+                        </div>
+
+                        <div id="evacRouteDetails" class="text-[11px] text-slate-700 bg-white/95 rounded-xl p-2.5 border border-slate-200/70 space-y-1"></div>
+                    </div>
+
+                    <div class="ios-glass rounded-2xl p-2.5 shadow-md border border-white flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span id="mapHouseStatusDot" class="w-3.5 h-3.5 rounded-full bg-[#16A34A] flex-shrink-0"></span>
+                            <div class="min-w-0">
+                                <div id="mapHouseStatusTitle" class="text-xs font-extrabold text-slate-900 truncate">Nhà 2 tầng: AN TOÀN</div>
+                                <div id="mapHouseCoordsSub" class="text-[10px] font-mono-num text-slate-500 truncate">16.4612°N, 107.5895°E • Đường Nguyễn Huệ</div>
+                            </div>
+                        </div>
+                        <button onclick="showEvacRoute()" class="px-3 py-2 rounded-xl bg-[#1B4D3E] hover:bg-[#13382D] text-white text-[11px] font-extrabold flex-shrink-0 active:scale-95 transition">
+                            Chỉ đường sơ tán
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================= -->
+            <!-- TAB 3: NHU CẦU DỰ TRỮ THEO NHÂN KHẨU (SONALOG STYLE)          -->
+            <!-- ============================================================= -->
+            <section id="view-needs" class="tab-view hidden absolute inset-0 overflow-y-auto no-scrollbar px-4 pt-3 pb-24 space-y-3.5">
+                <div>
+                    <h1 class="text-[22px] font-extrabold tracking-tight text-slate-900 leading-none">Nhu cầu &amp; Dự trữ</h1>
+                    <p class="text-[11px] text-slate-500 mt-1 font-medium">Nhập lượng thực tế hiện có để ước tính số ngày duy trì cho gia đình</p>
+                </div>
+
+                <!-- 1. THẺ ƯỚC TÍNH THỜI GIAN DUY TRÌ THỰC TẾ -->
+                <div id="survivalSummaryCard" class="sonalog-card p-4 space-y-2.5 border-l-4 border-l-[#1B4D3E]">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E] uppercase tracking-wide">
+                            Ước tính duy trì thực tế
+                        </span>
+                        <span id="survivalHouseholdBadge" class="text-[11px] font-extrabold text-slate-600">4 thành viên</span>
+                    </div>
+                    <div class="flex items-baseline justify-between gap-2">
+                        <div class="text-2xl font-extrabold font-mono-num text-[#1B4D3E]" id="survivalMinDaysVal">2.7 ngày</div>
+                        <div id="survivalGoalComparison" class="text-[11px] font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+                            Mục tiêu: 7 ngày
+                        </div>
+                    </div>
+                    <p id="survivalLimitingNote" class="text-xs text-slate-600 leading-snug">
+                        Hết sớm nhất: <strong>Nước uống &amp; sinh hoạt</strong> (đủ dùng 2.7 ngày cho 4 người).
+                    </p>
+                </div>
+
+                <!-- 2. THÀNH PHẦN GIA ĐÌNH -->
+                <div class="sonalog-card p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <h2 class="text-sm font-extrabold text-slate-900">Thành phần gia đình (<span id="kitMemberCount">4</span>)</h2>
+                        </div>
+                        <button onclick="openMemberModal()" class="px-2.5 py-1 rounded-full bg-[#EBF3F0] hover:bg-[#DCE7E2] text-xs font-extrabold text-[#1B4D3E] flex items-center gap-1 transition">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm người
+                        </button>
+                    </div>
+                    <div id="kitMembersList" class="divide-y divide-slate-100"></div>
+                </div>
+
+                <!-- 3. SỐ NGÀY DỰ TRỮ MỤC TIÊU -->
+                <div class="sonalog-card p-4 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <h2 class="text-sm font-extrabold text-slate-900">Số ngày dự trữ mục tiêu</h2>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="customReserveDaysInput" min="1" max="30" value="7" onchange="setReserveDays(this.value)" class="w-12 px-1.5 py-1 rounded-lg bg-[#F4F7F6] border border-slate-200 text-xs font-extrabold font-mono-num text-center text-[#1B4D3E]">
+                            <span class="text-[11px] font-bold text-slate-500">ngày</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#EEF2F0] p-1 rounded-2xl grid grid-cols-3 gap-1">
+                        <button id="segDays3" onclick="setReserveDays(3)" class="py-1.5 rounded-xl text-[11px] font-bold text-slate-600 transition">3 ngày (Tối thiểu)</button>
+                        <button id="segDays5" onclick="setReserveDays(5)" class="py-1.5 rounded-xl text-[11px] font-bold text-slate-600 transition">5 ngày (Tiêu chuẩn)</button>
+                        <button id="segDays7" onclick="setReserveDays(7)" class="py-1.5 rounded-xl text-[11px] font-extrabold bg-white text-slate-900 shadow-2xs transition">7 ngày (Khuyến nghị)</button>
+                    </div>
+                </div>
+
+                <!-- 4. THIẾT LẬP LƯỢNG DỰ TRỮ HIỆN CÓ -->
+                <div class="sonalog-card p-4 space-y-3.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center">
+                                <i data-lucide="package-check" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <h2 class="text-sm font-extrabold text-slate-900">Nhu cầu &amp; Lượng hiện có</h2>
+                        </div>
+                        <button onclick="openSupplyModal()" class="px-2.5 py-1 rounded-full bg-[#1B4D3E] hover:bg-[#13382D] text-white text-[11px] font-extrabold flex items-center gap-1 transition active:scale-95">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Thêm mục
+                        </button>
+                    </div>
+                    <div id="kitNeedsBars" class="space-y-3"></div>
+                </div>
+            </section>
+
+            <!-- ============================================================= -->
+            <!-- TAB 4: THẺ KHẨN CẤP & TÚI THOÁT HIỂM (SONALOG STYLE)          -->
+            <!-- ============================================================= -->
+            <section id="view-kit" class="tab-view hidden absolute inset-0 overflow-y-auto no-scrollbar px-4 pt-3 pb-24 space-y-3.5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-[22px] font-extrabold tracking-tight text-slate-900 leading-none">Thẻ khẩn cấp</h1>
+                        <p class="text-[11px] text-slate-500 mt-1 font-medium">Túi thoát hiểm &amp; danh bạ cứu hộ tại Huế</p>
+                    </div>
+                    <span id="kitReadyBadge" class="text-[11px] font-extrabold text-[#1B4D3E] bg-[#EBF3F0] px-2.5 py-1 rounded-full">3/8 sẵn sàng</span>
+                </div>
+
+                <!-- Danh mục túi khẩn cấp -->
+                <div class="sonalog-card px-4 py-2 divide-y divide-slate-100">
+                    <div id="kitChecklistItems" class="divide-y divide-slate-100"></div>
+                    <button onclick="openBagItemModal()" class="w-full py-3 flex items-center justify-between text-xs font-extrabold text-[#1B4D3E]">
+                        <span>Thêm vật dụng túi thoát hiểm</span>
+                        <span class="w-5 h-5 rounded-full bg-slate-200/80 text-slate-600 flex items-center justify-center">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Liên hệ khẩn cấp -->
+                <div class="sonalog-card p-4 space-y-2.5">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+                            <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                        </span>
+                        <h2 class="text-sm font-extrabold text-slate-900">Liên hệ khẩn cấp tại Huế</h2>
+                    </div>
+
+                    <div class="divide-y divide-slate-100 text-xs">
+                        <div class="py-2.5 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="font-extrabold text-[#1B4D3E]">Người thân hộ gia đình</div>
+                                <div class="font-mono-num text-slate-500" id="cardContactFamilyPhone">0914-678-910</div>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button onclick="openNativeSmsApp()" class="px-2.5 py-1.5 rounded-full bg-[#1B4D3E] text-white font-extrabold">Nhắn SMS</button>
+                                <a id="cardCallFamilyLink" href="tel:0914678910" class="px-3 py-1.5 rounded-full bg-[#EBF3F0] text-[#1B4D3E] font-extrabold">Gọi</a>
+                            </div>
+                        </div>
+                        <div class="py-2.5 flex items-center justify-between">
+                            <div>
+                                <div class="font-extrabold text-slate-900">Tổng đài Đô thị thông minh Hue-S</div>
+                                <div class="font-mono-num text-slate-500">1900 1075</div>
+                            </div>
+                            <a href="tel:19001075" class="px-3 py-1.5 rounded-full bg-[#EBF3F0] text-[#1B4D3E] font-extrabold">Gọi</a>
+                        </div>
+                        <div class="py-2.5 flex items-center justify-between">
+                            <div>
+                                <div class="font-extrabold text-red-700">Cứu nạn cứu hộ Quốc gia / Y tế</div>
+                                <div class="font-mono-num text-slate-500">112 • 114 • 115</div>
+                            </div>
+                            <a href="tel:112" class="px-3 py-1.5 rounded-full bg-red-50 text-red-700 font-extrabold">Gọi 112</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================= -->
+            <!-- TAB 5: CÀI ĐẶT HỘ DÂN (LOẠI NHÀ 1/2 TẦNG + CHỦ HỘ + MỐC LŨ)   -->
+            <!-- ============================================================= -->
+            <section id="view-settings" class="tab-view hidden absolute inset-0 overflow-y-auto no-scrollbar px-4 pt-3 pb-24 space-y-3.5">
+                <div class="flex items-center justify-between gap-2">
+                    <div>
+                        <h1 class="text-[22px] font-extrabold tracking-tight text-slate-900 leading-none">Cài đặt hộ dân</h1>
+                        <p class="text-[11px] text-slate-500 mt-1 font-medium">Thiết lập loại nhà &amp; cao độ cảnh báo trong 30 giây</p>
+                    </div>
+                    <button type="button" onclick="openResetModal()" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-600 hover:text-red-600 active:scale-95 transition">
+                        Đặt lại mặc định
+                    </button>
+                </div>
+
+                <form onsubmit="saveHouseholdConfig(event)" class="space-y-3.5">
+                    <!-- BƯỚC 1: CHỌN LOẠI NHÀ (NHÀ 1 TẦNG VS NHÀ 2 TẦNG) -->
+                    <div class="sonalog-card p-4 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-[#1B4D3E] text-white text-[11px] font-extrabold flex items-center justify-center flex-shrink-0">1</span>
+                            <div>
+                                <h2 class="text-sm font-extrabold text-slate-900">Chọn kiến trúc ngôi nhà</h2>
+                                <p class="text-[10.5px] text-slate-500">Tự động lập kế hoạch di chuyển sớm hay trú ẩn tầng 2</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-2.5">
+                            <!-- Card 1: Nhà 1 tầng (Tầng trệt) -->
+                            <div id="cardHouseType1Floor" onclick="selectSettingsHouseType('1floor')" class="p-3 rounded-2xl border-2 border-slate-200 bg-[#F4F7F6] cursor-pointer transition space-y-1.5">
+                                <div class="flex items-center justify-between gap-2.5">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="w-12 h-11 rounded-xl bg-white border border-slate-200 p-1 flex-shrink-0">
+                                            <svg viewBox="0 0 64 56" class="w-full h-full">
+                                                <polygon points="6,26 32,10 58,26" fill="#B91C1C"/>
+                                                <rect x="12" y="26" width="40" height="22" fill="#FFFFFF" stroke="#64748B" stroke-width="2"/>
+                                                <rect x="18" y="34" width="9" height="14" fill="#FEF3C7" stroke="#D97706" stroke-width="1.4"/>
+                                                <rect x="33" y="33" width="12" height="9" fill="#EBF3F0" stroke="#1B4D3E" stroke-width="1.4"/>
+                                                <line x1="6" y1="48" x2="58" y2="48" stroke="#475569" stroke-width="2.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-extrabold text-slate-900">Nhà 1 tầng (Tầng trệt)</div>
+                                            <div class="text-[10.5px] font-bold text-red-700">Ưu tiên sơ tán sớm trước khi ngập đường</div>
+                                        </div>
+                                    </div>
+                                    <span id="radioHouse1Floor" class="w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center flex-shrink-0"></span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">
+                                    Không có tầng trên/gác lửng. Cảnh báo di chuyển sớm trước khi đường ngập chia cắt lối thoát.
+                                </p>
+                            </div>
+
+                            <!-- Card 2: Nhà 2 tầng (Có tầng trên) -->
+                            <div id="cardHouseType2Floor" onclick="selectSettingsHouseType('2floor')" class="p-3 rounded-2xl border-2 border-[#1B4D3E] bg-[#EBF3F0]/80 cursor-pointer transition space-y-1.5">
+                                <div class="flex items-center justify-between gap-2.5">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="w-12 h-11 rounded-xl bg-white border border-[#1B4D3E]/25 p-1 flex-shrink-0">
+                                            <svg viewBox="0 0 64 56" class="w-full h-full">
+                                                <polygon points="8,18 32,5 56,18" fill="#1B4D3E"/>
+                                                <rect x="13" y="18" width="38" height="30" fill="#FFFFFF" stroke="#64748B" stroke-width="2"/>
+                                                <rect x="14" y="19" width="36" height="13" fill="#ECFDF5"/>
+                                                <line x1="13" y1="33" x2="51" y2="33" stroke="#64748B" stroke-width="2"/>
+                                                <rect x="18" y="37" width="8" height="11" fill="#FEF3C7" stroke="#D97706" stroke-width="1.4"/>
+                                                <line x1="39" y1="48" x2="47" y2="33" stroke="#475569" stroke-width="2"/>
+                                                <line x1="6" y1="48" x2="58" y2="48" stroke="#475569" stroke-width="2.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-extrabold text-slate-900">Nhà 2 tầng (Có tầng trên)</div>
+                                            <div class="text-[10.5px] font-bold text-[#1B4D3E]">Kê cao đồ đạc &amp; rút lên tầng 2 trú ẩn</div>
+                                        </div>
+                                    </div>
+                                    <span id="radioHouse2Floor" class="w-5 h-5 rounded-full bg-[#1B4D3E] text-white flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="check" class="w-3 h-3"></i>
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">
+                                    Có tầng 2 / gác lửng kiên cố. Kê cao đồ đạc tầng trệt và rút lên tầng 2 trú ẩn an toàn.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BƯỚC 2: THÔNG TIN CHỦ HỘ & LIÊN HỆ SMS -->
+                    <div class="sonalog-card p-4 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-[#1B4D3E] text-white text-[11px] font-extrabold flex items-center justify-center flex-shrink-0">2</span>
+                            <h2 class="text-sm font-extrabold text-slate-900">Thông tin chủ hộ &amp; SĐT nhận SMS</h2>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Họ tên chủ hộ</label>
+                            <input type="text" id="cfgOwnerName" required class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">SĐT chủ hộ</label>
+                                <input type="tel" id="cfgOwnerPhone" required class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-mono-num font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">SĐT người thân</label>
+                                <input type="tel" id="cfgFamilyPhone" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-mono-num font-bold">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Địa chỉ nhà tại Huế</label>
+                            <div class="flex gap-1.5">
+                                <input type="text" id="cfgAddress" required class="flex-1 px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-semibold">
+                                <button type="button" onclick="switchTab('map'); togglePinMode(true);" class="px-3 rounded-xl bg-[#EBF3F0] text-[#1B4D3E] text-[11px] font-extrabold whitespace-nowrap">
+                                    Ghim bản đồ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BƯỚC 3: TRẠM THỦY VĂN THEO DÕI CHÍNH -->
+                    <div class="sonalog-card p-4 space-y-2.5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-[#1B4D3E] text-white text-[11px] font-extrabold flex items-center justify-center flex-shrink-0">3</span>
+                            <h2 class="text-sm font-extrabold text-slate-900">Trạm thủy văn theo dõi chính</h2>
+                        </div>
+                        <select id="cfgStationId" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold text-[#1B4D3E]">
+                            <option value="kimlong">Trạm Kim Long (Sông Hương • BĐ III: 3.50m)</option>
+                            <option value="phuoc">Trạm Phú Ốc (Sông Bồ • BĐ III: 4.50m)</option>
+                            <option value="davien">Trạm Dã Viên (Sông Hương - Nội đô • BĐ III: 3.50m)</option>
+                            <option value="phongbinh">Trạm Phong Bình (Sông Ô Lâu / Hạ du Sông Bồ)</option>
+                        </select>
+                    </div>
+
+                    <!-- BƯỚC 4: DẤU LŨ LỊCH SỬ CỦA NGÔI NHÀ -->
+                    <div class="sonalog-card p-4 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-[#1B4D3E] text-white text-[11px] font-extrabold flex items-center justify-center flex-shrink-0">4</span>
+                            <h2 class="text-sm font-extrabold text-slate-900">Dấu lũ lịch sử của ngôi nhà</h2>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="fillPreset2023()" class="px-2.5 py-1.5 rounded-xl bg-[#EBF3F0] text-[11px] font-extrabold text-[#1B4D3E] border border-[#1B4D3E]/20">
+                                Dùng mốc 15/11/2023: 4.34m
+                            </button>
+                            <button type="button" onclick="fillPreset2025()" class="px-2.5 py-1.5 rounded-xl bg-red-50 text-[11px] font-extrabold text-red-700 border border-red-200">
+                                Dùng mốc 27/10/2025: 5.05m
+                            </button>
+                        </div>
+
+                        <p class="text-[11px] text-slate-500 leading-relaxed">
+                            Nhập mực nước tại trạm đo lúc nước vừa tràn vào nền nhà bạn. Hệ thống tự động suy ra <strong>mốc vào sân (-84cm)</strong> và <strong>mốc sát bậc cửa (-20cm)</strong>.
+                        </p>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[11px] font-bold text-red-700 mb-1">Mốc tràn nền nhà (m)</label>
+                                <input type="number" id="cfgFloorLevel" step="0.01" min="0.5" max="10.0" required oninput="autoSyncYardInput(this.value)" class="w-full px-3 py-2.5 rounded-xl bg-[#EBF3F0] border border-[#1B4D3E]/25 text-sm font-extrabold font-mono-num text-[#1B4D3E]">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Mốc nước vào sân (m)</label>
+                                <input type="number" id="cfgYardLevel" step="0.01" min="0.2" max="9.5" required class="w-full px-3 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-sm font-extrabold font-mono-num text-slate-800">
+                            </div>
+                        </div>
+
+                        <div class="pt-1 flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900">Tự động bật còi báo động</div>
+                                <div class="text-[11px] text-slate-500">Kêu chuông ngay khi chạm ngưỡng nguy hiểm</div>
+                            </div>
+                            <label class="ios-switch">
+                                <input type="checkbox" id="cfgAutoAlert" checked>
+                                <span class="ios-switch-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#1B4D3E] hover:bg-[#13382D] text-white text-xs font-extrabold shadow-sm transition active:scale-[0.99]">
+                        Lưu Thiết Lập Hộ Gia Đình
+                    </button>
+                </form>
+
+                <!-- THẺ GIỚI THIỆU ỨNG DỤNG & VERSION V1 -->
+                <div class="sonalog-card p-5 space-y-4">
+                    <div class="flex flex-col items-center text-center space-y-2">
+                        <div class="w-20 h-22">
+                            <svg viewBox="0 0 200 226" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <clipPath id="settingsShieldClip">
+                                        <path d="M100 18 L174 44 V112 C174 162 142 192 100 206 C58 192 26 162 26 112 V44 Z" />
+                                    </clipPath>
+                                </defs>
+                                <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="#FFFFFF" />
+                                <g clip-path="url(#settingsShieldClip)">
+                                    <path d="M80 84 A28 28 0 0 1 120 84" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                                    <path d="M68 72 A44 44 0 0 1 132 72" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                                    <path d="M56 60 A60 60 0 0 1 144 60" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                                    <path d="M22 122 Q100 84 178 122" fill="none" stroke="#4A148C" stroke-width="7"/>
+                                    <line x1="22" y1="129" x2="178" y2="129" stroke="#4A148C" stroke-width="8"/>
+                                    <path d="M36 129 L45 113 L55 129 L65 108 L76 129 L88 104 L100 129 L112 104 L124 129 L135 108 L145 129 L155 113 L164 129" fill="none" stroke="#4A148C" stroke-width="4.5" stroke-linejoin="round"/>
+                                    <path d="M50 129 L47 149 H63 L60 129 Z" fill="#4A148C"/>
+                                    <path d="M140 129 L137 149 H153 L150 129 Z" fill="#4A148C"/>
+                                    <path d="M18 143 Q45 136 72 144 T128 144 T182 142 V215 H18 Z" fill="#0E7490"/>
+                                    <path d="M18 157 Q48 150 78 158 T138 158 T182 156 V215 H18 Z" fill="#14B8A6" opacity="0.55"/>
+                                </g>
+                                <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="none" stroke="#4A148C" stroke-width="10" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E]">GIỚI THIỆU ỨNG DỤNG</span>
+                            <h3 class="text-base font-extrabold text-slate-900 mt-1">Huế FloodGuard</h3>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 leading-relaxed text-justify">
+                        Hệ thống hỗ trợ người dân Thành phố Huế theo dõi mực nước lũ thời gian thực từ các trạm quan trắc (Kim Long, Phú Ốc, Dã Viên, Phong Bình) đồng bộ 30 phút/lần với Hue-S, cá nhân hóa ngưỡng cảnh báo ngập theo kiến trúc nhà 1 tầng hay 2 tầng và cao độ từng hộ gia đình, gửi tin nhắn SMS khẩn cấp và dẫn đường sơ tán an toàn.
+                    </p>
+
+                    <div class="p-4 rounded-2xl bg-[#EBF3F0] border border-[#1B4D3E]/15 text-center space-y-1.5">
+                        <div class="inline-block px-3 py-0.5 rounded-full bg-[#1B4D3E] text-white text-[11px] font-extrabold">
+                            Version V1
+                        </div>
+                        <div class="text-base font-extrabold text-slate-900 pt-0.5">
+                            ThS. Trương Thế Quy
+                        </div>
+                        <div class="text-xs font-semibold text-[#1B4D3E] leading-snug">
+                            Khoa Tin học, Trường Đại học Sư phạm, Đại học Huế
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ================================================================= -->
+        <!-- BOTTOM 5-TAB MOBILE iOS NAVIGATION BAR (SONALOG STYLE)            -->
+        <!-- ================================================================= -->
+        <nav class="ios-glass border-t border-slate-200/80 px-1.5 pt-1.5 pb-safe grid grid-cols-5 gap-1 z-[1050] flex-shrink-0">
+            <button onclick="switchTab('alert')" id="tabBtn-alert" class="nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl bg-[#EBF3F0] text-[#1B4D3E] font-extrabold transition">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="text-[10px]">Cảnh báo</span>
+            </button>
+
+            <button onclick="switchTab('map')" id="tabBtn-map" class="nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl text-slate-500 hover:text-slate-900 font-semibold transition">
+                <i data-lucide="map" class="w-4 h-4"></i>
+                <span class="text-[10px]">Bản đồ lũ</span>
+            </button>
+
+            <button onclick="switchTab('needs')" id="tabBtn-needs" class="nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl text-slate-500 hover:text-slate-900 font-semibold transition">
+                <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                <span class="text-[10px]">Nhu cầu</span>
+            </button>
+
+            <button onclick="switchTab('kit')" id="tabBtn-kit" class="nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl text-slate-500 hover:text-slate-900 font-semibold transition">
+                <i data-lucide="briefcase-medical" class="w-4 h-4"></i>
+                <span class="text-[10px]">Thẻ khẩn cấp</span>
+            </button>
+
+            <button onclick="switchTab('settings')" id="tabBtn-settings" class="nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl text-slate-500 hover:text-slate-900 font-semibold transition">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span class="text-[10px]">Cài đặt</span>
+            </button>
+        </nav>
+
+        <!-- ================================================================= -->
+        <!-- MODAL GIỚI THIỆU & VERSION V1                                     -->
+        <!-- ================================================================= -->
+        <div id="aboutModal" class="hidden absolute inset-0 bg-slate-900/45 backdrop-blur-xs z-[3000] flex items-end sm:items-center justify-center p-3">
+            <div class="bg-white rounded-3xl w-full p-5 space-y-4 shadow-2xl border border-slate-100 relative">
+                <button onclick="closeAboutModal()" class="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800" aria-label="Đóng">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+
+                <div class="flex flex-col items-center text-center space-y-2 pt-1">
+                    <div class="w-20 h-22">
+                        <svg viewBox="0 0 200 226" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <clipPath id="modalShieldClip">
+                                    <path d="M100 18 L174 44 V112 C174 162 142 192 100 206 C58 192 26 162 26 112 V44 Z" />
+                                </clipPath>
+                            </defs>
+                            <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="#FFFFFF" />
+                            <g clip-path="url(#modalShieldClip)">
+                                <path d="M80 84 A28 28 0 0 1 120 84" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                                <path d="M68 72 A44 44 0 0 1 132 72" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                                <path d="M56 60 A60 60 0 0 1 144 60" fill="none" stroke="#F59E0B" stroke-width="7.5" stroke-linecap="round"/>
+                                <path d="M22 122 Q100 84 178 122" fill="none" stroke="#4A148C" stroke-width="7"/>
+                                <line x1="22" y1="129" x2="178" y2="129" stroke="#4A148C" stroke-width="8"/>
+                                <path d="M36 129 L45 113 L55 129 L65 108 L76 129 L88 104 L100 129 L112 104 L124 129 L135 108 L145 129 L155 113 L164 129" fill="none" stroke="#4A148C" stroke-width="4.5" stroke-linejoin="round"/>
+                                <path d="M50 129 L47 149 H63 L60 129 Z" fill="#4A148C"/>
+                                <path d="M140 129 L137 149 H153 L150 129 Z" fill="#4A148C"/>
+                                <path d="M18 143 Q45 136 72 144 T128 144 T182 142 V215 H18 Z" fill="#0E7490"/>
+                                <path d="M18 157 Q48 150 78 158 T138 158 T182 156 V215 H18 Z" fill="#14B8A6" opacity="0.55"/>
+                            </g>
+                            <path d="M100 14 L180 42 V112 C180 166 146 198 100 212 C54 198 20 166 20 112 V42 Z" fill="none" stroke="#4A148C" stroke-width="10" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E]">GIỚI THIỆU ỨNG DỤNG</span>
+                        <h3 class="text-base font-extrabold text-slate-900 mt-1">Huế FloodGuard</h3>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-600 leading-relaxed text-justify">
+                    Giải pháp số hỗ trợ người dân Thành phố Huế giám sát mực nước lũ thời gian thực từ hệ thống Hue-S (Trạm Kim Long, Dã Viên, Phú Ốc, Phong Bình), cá nhân hóa ngưỡng cảnh báo ngập theo kiến trúc nhà 1 tầng hay 2 tầng và cao độ từng hộ gia đình, quản lý túi thoát hiểm và định tuyến di chuyển sơ tán an toàn.
+                </p>
+
+                <div class="p-4 rounded-2xl bg-[#EBF3F0] border border-[#1B4D3E]/15 text-center space-y-1.5">
+                    <div class="inline-block px-3 py-0.5 rounded-full bg-[#1B4D3E] text-white text-[10px] font-extrabold">
+                        Version V1
+                    </div>
+                    <div class="text-base font-extrabold text-slate-900 pt-0.5">
+                        ThS. Trương Thế Quy
+                    </div>
+                    <div class="text-xs font-semibold text-[#1B4D3E] leading-snug">
+                        Khoa Tin học, Trường Đại học Sư phạm, Đại học Huế
+                    </div>
+                </div>
+
+                <button onclick="closeAboutModal()" class="w-full py-2.5 rounded-2xl bg-[#1B4D3E] text-white text-xs font-extrabold">
+                    Đóng
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL XÁC NHẬN ĐẶT LẠI MẶC ĐỊNH -->
+        <div id="resetModal" class="hidden absolute inset-0 bg-slate-900/45 backdrop-blur-xs z-[3000] flex items-end sm:items-center justify-center p-3">
+            <div class="bg-white rounded-3xl w-full p-5 space-y-3.5 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold text-slate-900">Đặt lại dữ liệu mặc định?</h3>
+                    <button onclick="closeResetModal()" class="p-1.5 rounded-full bg-slate-100 text-slate-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Toàn bộ thông số hộ gia đình, vị trí ghim bản đồ và danh sách dự trữ sẽ được khôi phục về mặc định ban đầu (Mốc 15/11/2023: 4.34m, Nhà 2 tầng).
+                </p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="closeResetModal()" class="py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-xs font-extrabold">Hủy</button>
+                    <button onclick="confirmResetApp()" class="py-2.5 rounded-2xl bg-red-600 text-white text-xs font-extrabold">Đặt lại ngay</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL THÊM THÀNH VIÊN GIA ĐÌNH -->
+        <div id="memberModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-xs z-[3000] flex items-end justify-center p-3">
+            <div class="bg-white rounded-3xl w-full p-5 space-y-3 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold text-slate-900">Thêm thành viên gia đình</h3>
+                    <button onclick="closeMemberModal()" class="p-1.5 rounded-full bg-slate-100 text-slate-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <input type="text" id="newMemberName" placeholder="Tên (Ví dụ: Ông nội, Bé Na...)" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                <select id="newMemberRole" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                    <option value="Người lớn">Người lớn</option>
+                    <option value="Trẻ em">Trẻ em</option>
+                    <option value="Người cao tuổi • Thuốc">Người cao tuổi • Thuốc</option>
+                </select>
+                <button onclick="confirmAddMember()" class="w-full py-2.5 rounded-2xl bg-[#1B4D3E] text-white text-xs font-extrabold">
+                    Thêm vào hộ gia đình
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL THÊM VẬT DỤNG TÚI THOÁT HIỂM -->
+        <div id="bagItemModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-xs z-[3000] flex items-end justify-center p-3">
+            <div class="bg-white rounded-3xl w-full p-5 space-y-3 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold text-slate-900">Thêm vào túi thoát hiểm</h3>
+                    <button onclick="closeBagItemModal()" class="p-1.5 rounded-full bg-slate-100 text-slate-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <input type="text" id="newBagItemTitle" placeholder="Tên vật dụng (Ví dụ: Áo phao, Còi cứu hộ...)" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                <button onclick="confirmAddBagItem()" class="w-full py-2.5 rounded-2xl bg-[#1B4D3E] text-white text-xs font-extrabold">
+                    Lưu vào danh mục
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL THÊM NHU YẾU PHẨM DỰ TRỮ TÙY CHỈNH -->
+        <div id="supplyModal" class="hidden absolute inset-0 bg-slate-900/45 backdrop-blur-xs z-[3000] flex items-end justify-center p-3">
+            <div class="bg-white rounded-3xl w-full p-5 space-y-3 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold text-slate-900">Thêm nhu yếu phẩm dự trữ</h3>
+                    <button onclick="closeSupplyModal()" class="p-1.5 rounded-full bg-slate-100 text-slate-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tên nhu yếu phẩm</label>
+                        <input type="text" id="newSupplyName" placeholder="Ví dụ: Sữa hộp, Nước mắm, Nến..." class="w-full px-3.5 py-2 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Đơn vị tính</label>
+                            <input type="text" id="newSupplyUnit" placeholder="hộp, chai, kg..." class="w-full px-3.5 py-2 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Hiện có trong nhà</label>
+                            <input type="number" id="newSupplyCurrent" step="0.5" min="0" value="4" class="w-full px-3.5 py-2 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-mono-num font-bold">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Định mức dùng / 1 người / 1 ngày</label>
+                        <input type="number" id="newSupplyDailyPerPerson" step="0.1" min="0.1" value="0.5" class="w-full px-3.5 py-2 rounded-xl bg-[#F4F7F6] border border-slate-200 text-xs font-mono-num font-bold">
+                    </div>
+                </div>
+                <button onclick="confirmAddSupply()" class="w-full py-2.5 rounded-2xl bg-[#1B4D3E] text-white text-xs font-extrabold">
+                    Thêm vào bảng dự trữ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // 1. STATE & CẤU HÌNH HỆ THỐNG (LOCALSTORAGE KEY SẠCH MỚI)
+        // =====================================================================
+        const STORAGE_KEY = 'hue_floodguard_v1_final';
+        let map = null;
+        let layers = { zones: null, stations: null, hazards: null, shelters: null, house: null, route: null };
+        let isPinMode = false;
+        let autoSyncTimer = null;
+        let pendingHouseType = '2floor';
+
+        const HYDRO_STATIONS = [
+            { id: 'kimlong', name: 'Trạm Kim Long', river: 'Sông Hương', lat: 16.4582, lng: 107.5515, ratio: 1.00, bd1: 1.00, bd2: 2.00, bd3: 3.50 },
+            { id: 'phuoc', name: 'Trạm Phú Ốc', river: 'Sông Bồ', lat: 16.5350, lng: 107.5380, ratio: 1.05, bd1: 1.50, bd2: 3.00, bd3: 4.50 },
+            { id: 'davien', name: 'Trạm Dã Viên', river: 'Sông Hương', lat: 16.4628, lng: 107.5685, ratio: 0.96, bd1: 1.00, bd2: 2.00, bd3: 3.50 },
+            { id: 'phongbinh', name: 'Trạm Phong Bình', river: 'Sông Ô Lâu', lat: 16.6320, lng: 107.4280, ratio: 0.56, bd1: 1.50, bd2: 3.00, bd3: 4.50 }
+        ];
+
+        const HUE_NEIGHBORHOODS = [
+            { name: 'Đường Nguyễn Huệ', address: 'Đường Nguyễn Huệ - Đống Đa, TP. Huế', lat: 16.4612, lng: 107.5895, station: 'kimlong' },
+            { name: 'Phường Kim Long', address: 'Đường Kim Long, TP. Huế', lat: 16.4590, lng: 107.5565, station: 'kimlong' },
+            { name: 'Phường Vỹ Dạ', address: 'Phạm Văn Đồng - Vỹ Dạ, TP. Huế', lat: 16.4752, lng: 107.6048, station: 'kimlong' },
+            { name: 'Đập Đá - Lê Lợi', address: 'Khu vực Đập Đá (+1.80m) - Lê Lợi, TP. Huế', lat: 16.4728, lng: 107.5978, station: 'kimlong' },
+            { name: 'Phường Phú Hậu', address: 'Đường Chi Lăng - Phú Hậu, TP. Huế', lat: 16.4842, lng: 107.5960, station: 'kimlong' },
+            { name: 'Quảng Điền - Sông Bồ', address: 'Thị trấn Sịa - Quảng Điền, Huế', lat: 16.5785, lng: 107.5150, station: 'phuoc' }
+        ];
+
+        const ROAD_CUTOFF_MILESTONES = [
+            { trigger: 1.80, title: 'Đập Đá tràn nước (Cấm qua lại)', detail: 'Cao trình +1.80m • Tránh qua hướng Vỹ Dạ – Lê Lợi.' },
+            { trigger: 2.50, title: 'Đường trũng Kim Long, Vỹ Dạ, Phú Hậu', detail: 'Nước bắt đầu ngập sâu các tuyến ven sông.' },
+            { trigger: 3.20, title: 'Ngã tư Nguyễn Công Trứ – Bến Nghé, Đống Đa', detail: 'Ngập sâu, xe máy dễ chết máy khi đi qua.' },
+            { trigger: 3.50, title: 'Ngập diện rộng nội đô TP. Huế (BĐ III)', detail: 'Nhiều cung đường bị chia cắt hoàn toàn.' }
+        ];
+
+        const IMPASSABLE_ROADS = [
+            { name: 'Đập Đá tràn nước (Cao trình +1.80m)', lat: 16.4733, lng: 107.5982, trigger: 1.80 },
+            { name: 'Ngã tư Nguyễn Công Trứ - Bến Nghé', lat: 16.4694, lng: 107.5945, trigger: 3.20 }
+        ];
+
+        const FLOOD_RISK_ZONES = [
+            { name: 'Vùng ngập Đập Đá - Cồn Hến (>1.80m)', lat: 16.4735, lng: 107.5985, radius: 320, trigger: 1.80 },
+            { name: 'Vùng ngập Nguyễn Công Trứ - Bến Nghé', lat: 16.4692, lng: 107.5945, radius: 270, trigger: 3.20 },
+            { name: 'Vùng trũng ven sông Kim Long', lat: 16.4590, lng: 107.5560, radius: 300, trigger: 2.50 },
+            { name: 'Vùng trũng Vỹ Dạ - Kênh An Cựu', lat: 16.4680, lng: 107.6020, radius: 340, trigger: 2.50 }
+        ];
+
+        const EVAC_SHELTERS = [
+            { short: 'ĐH Sư phạm Huế', name: 'Trường ĐH Sư phạm - Đại học Huế (34 Lê Lợi)', lat: 16.4675, lng: 107.5882 },
+            { short: 'BV Trung ương Huế', name: 'Bệnh viện Trung ương Huế (16 Lê Lợi)', lat: 16.4622, lng: 107.5865 },
+            { short: 'Đồi Đàn Nam Giao', name: 'Khu vực cao ráo Đàn Nam Giao - Điện Biên Phủ', lat: 16.4455, lng: 107.5750 }
+        ];
+
+        const DEFAULT_SUPPLIES = [
+            { id: 'water', name: 'Nước uống & sinh hoạt', unit: 'lít', current: 28, step: 5, dailyAdult: 3.0, dailyChild: 2.0, dailyElderly: 2.5, perHouseholdDaily: 0, custom: false },
+            { id: 'rice', name: 'Gạo dự trữ', unit: 'kg', current: 8, step: 1, dailyAdult: 0.4, dailyChild: 0.25, dailyElderly: 0.3, perHouseholdDaily: 0, custom: false },
+            { id: 'dryfood', name: 'Thức ăn khô / Mì gói', unit: 'gói', current: 25, step: 5, dailyAdult: 2.0, dailyChild: 1.5, dailyElderly: 1.5, perHouseholdDaily: 0, custom: false },
+            { id: 'battery', name: 'Pin dự phòng & Đèn sạc', unit: 'cục', current: 3, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 0.5, custom: false },
+            { id: 'gas', name: 'Bình gas mini / Cồn khô', unit: 'bình', current: 4, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 0.6, custom: false },
+            { id: 'medicine', name: 'Thuốc men & Y tế cơ bản', unit: 'ngày', current: 5, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 1.0, custom: false }
+        ];
+
+        const DEFAULT_STATE = {
+            ownerName: 'Nguyễn Văn Minh',
+            ownerPhone: '0905-123-456',
+            familyPhone: '0914-678-910',
+            address: 'Đường Nguyễn Huệ - Đống Đa, TP. Huế',
+            lat: 16.4612,
+            lng: 107.5895,
+            stationId: 'kimlong',
+            houseType: '2floor', // '1floor' | '2floor'
+            floorLevel: 4.34,
+            yardLevel: 3.50,
+            autoAlert: true,
+            kimLongLevel: 0.00,
+            risingSpeedCmHr: 0,
+            reserveDays: 7,
+            showFloodZones: true,
+            selectedShelterIdx: 0,
+            completedTasks: {},
+            members: [
+                { id: 'm1', name: 'Bố', role: 'Người lớn' },
+                { id: 'm2', name: 'Mẹ', role: 'Người lớn' },
+                { id: 'm3', name: 'Minh', role: 'Trẻ em' },
+                { id: 'm4', name: 'Bà', role: 'Người cao tuổi • Thuốc' }
+            ],
+            supplies: JSON.parse(JSON.stringify(DEFAULT_SUPPLIES)),
+            kitItems: [
+                { id: 'k1', name: 'Nước uống đóng chai (tối thiểu 3L/người/ngày)', checked: false },
+                { id: 'k2', name: 'Thực phẩm ăn liền (mì gói, lương khô, sữa)', checked: false },
+                { id: 'k3', name: 'Pin dự phòng & đèn pin chống nước', checked: true },
+                { id: 'k4', name: 'Thuốc thiết yếu & bộ sơ cứu y tế', checked: true },
+                { id: 'k5', name: 'Bản sao giấy tờ tùy thân bọc túi chống nước', checked: true },
+                { id: 'k6', name: 'Tiền mặt mệnh giá nhỏ', checked: false },
+                { id: 'k7', name: 'Áo phao & còi báo hiệu cứu hộ', checked: false },
+                { id: 'k8', name: 'Bồn cầu di động / túi vệ sinh khẩn cấp', checked: false }
+            ]
+        };
+
+        let state = loadState();
+
+        function safeLucide() {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    return {
+                        ...DEFAULT_STATE,
+                        ...parsed,
+                        houseType: parsed.houseType === '1floor' ? '1floor' : '2floor',
+                        completedTasks: parsed.completedTasks && typeof parsed.completedTasks === 'object' ? parsed.completedTasks : {},
+                        supplies: Array.isArray(parsed.supplies) && parsed.supplies.length > 0
+                            ? parsed.supplies
+                            : JSON.parse(JSON.stringify(DEFAULT_SUPPLIES))
+                    };
+                }
+            } catch (e) {}
+            return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        }
+
+        function persistState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {}
+        }
+
+        function getActiveStation() {
+            return HYDRO_STATIONS.find(s => s.id === state.stationId) || HYDRO_STATIONS[0];
+        }
+
+        function getStationLevel(station) {
+            return +(state.kimLongLevel * station.ratio).toFixed(2);
+        }
+
+        // =====================================================================
+        // 2. LOGIC PHÂN TÍCH NGẬP & KẾ HOẠCH DI CHUYỂN THEO LOẠI NHÀ
+        // =====================================================================
+        function getOfficialAlertTier(station, level) {
+            if (level > station.bd3) {
+                return { code: 'TRÊN BĐ III', label: 'Khẩn cấp (> BĐ III)', color: '#6B21A8' };
+            } else if (level >= station.bd3) {
+                return { code: 'BĐ III', label: 'Báo động III', color: '#DC2626' };
+            } else if (level >= station.bd2) {
+                return { code: 'BĐ II', label: 'Báo động II', color: '#EA580C' };
+            } else if (level >= station.bd1) {
+                return { code: 'BĐ I', label: 'Báo động I', color: '#EAB308' };
+            }
+            return { code: 'Dưới BĐ I', label: 'Dưới BĐ I', color: '#16A34A' };
+        }
+
+        function evaluateHouseholdFlood() {
+            const st = getActiveStation();
+            const currentLvl = getStationLevel(st);
+            const officialTier = getOfficialAlertTier(st, currentLvl);
+            const doorstepLvl = +(state.floorLevel - 0.20).toFixed(2);
+            const is1Floor = state.houseType === '1floor';
+
+            const diffFloorCm = Math.round((state.floorLevel - currentLvl) * 100);
+            const diffYardCm = Math.round((state.yardLevel - currentLvl) * 100);
+            const needEarly1FloorEvac = is1Floor && (state.kimLongLevel >= 1.80 || currentLvl >= st.bd2 || diffYardCm <= 40);
+
+            let etaText = `${officialTier.label} • Chưa ngập`;
+            if (diffFloorCm <= 0) {
+                etaText = `Tràn nền +${Math.abs(diffFloorCm)}cm`;
+            } else if (state.risingSpeedCmHr > 0 && currentLvl >= st.bd1) {
+                const totalMins = Math.round((diffFloorCm / state.risingSpeedCmHr) * 60);
+                const hrs = Math.floor(totalMins / 60);
+                const mins = totalMins % 60;
+                etaText = hrs > 0 ? `~${hrs}g ${mins}p nữa chạm nền` : `~${Math.max(5, mins)}p nữa chạm nền`;
+            }
+
+            if (diffFloorCm <= 0) {
+                return {
+                    key: 'flooded',
+                    officialTier,
+                    needEarly1FloorEvac,
+                    heroBadge: is1Floor ? 'NGUY HIỂM: NGẬP NHÀ 1 TẦNG' : 'NGUY HIỂM: NƯỚC TRÀN TẦNG 1',
+                    shortBadge: `Tràn nền +${Math.abs(diffFloorCm)}cm`,
+                    plainAdvice: is1Floor
+                        ? `Nước ngập nền nhà 1 tầng +${Math.abs(diffFloorCm)} cm! Không có tầng trên — Gọi 112/115 ngay nếu chưa kịp sơ tán.`
+                        : `Nước tràn nền tầng 1 +${Math.abs(diffFloorCm)} cm! Ngắt aptomat tầng trệt và rút lên tầng 2 trú ẩn an toàn.`,
+                    subAction: is1Floor
+                        ? 'Cúp cầu dao tổng, mặc áo phao/vật nổi, không tự lội dòng nước xiết và gọi ngay lực lượng cứu hộ 112/115.'
+                        : 'Đường ngoài đã bị chia cắt sâu; không mạo hiểm ra ngoài, giữ lương thực/nước sạch và ở yên trên tầng 2.',
+                    floorLabel: `Tràn nền +${Math.abs(diffFloorCm)}cm`,
+                    yardLabel: `Ngập sân ${Math.abs(diffYardCm)}cm`,
+                    color: currentLvl > st.bd3 + 0.8 ? '#6B21A8' : '#DC2626',
+                    boxClass: 'bg-red-50 border-red-300',
+                    etaText
+                };
+            } else if (currentLvl >= doorstepLvl || currentLvl >= st.bd3) {
+                return {
+                    key: 'doorstep',
+                    officialTier,
+                    needEarly1FloorEvac,
+                    heroBadge: is1Floor ? 'KHẨN CẤP: SƠ TÁN NGAY' : 'KHẨN CẤP: SÁT BẬC CỬA',
+                    shortBadge: `Cách nền +${diffFloorCm}cm`,
+                    plainAdvice: is1Floor
+                        ? `Còn cách nền +${diffFloorCm} cm • Nhà 1 tầng không có gác: Rời nhà đi tránh trú NGAY trước khi mất lối thoát!`
+                        : `Còn cách nền +${diffFloorCm} cm • Kê cao tủ lạnh/máy giặt, ngắt điện tầng 1 và rút lên tầng 2!`,
+                    subAction: is1Floor
+                        ? 'Khóa cửa, ngắt cầu dao tổng, mang túi thoát hiểm di chuyển ngay tới điểm tránh trú cao ráo.'
+                        : 'Nhiều cung đường ngoài đã bị chia cắt (≥ BĐ III). Ưu tiên cố thủ an toàn trên tầng 2 thay vì lội nước.',
+                    floorLabel: `Cách nền +${diffFloorCm}cm`,
+                    yardLabel: diffYardCm <= 0 ? `Ngập sân ${Math.abs(diffYardCm)}cm` : `Cách sân +${diffYardCm}cm`,
+                    color: '#DC2626',
+                    boxClass: 'bg-red-50/90 border-red-200',
+                    etaText
+                };
+            } else if (diffYardCm <= 0 || currentLvl >= st.bd2 || (is1Floor && state.kimLongLevel >= 1.80)) {
+                return {
+                    key: 'yard',
+                    officialTier,
+                    needEarly1FloorEvac,
+                    heroBadge: is1Floor ? 'CẢNH BÁO SỚM: SƠ TÁN NHÀ 1 TẦNG' : 'CHÚ Ý: NƯỚC VÀO SÂN',
+                    shortBadge: `Cách nền +${diffFloorCm}cm`,
+                    plainAdvice: is1Floor
+                        ? `Còn cách nền +${diffFloorCm} cm • Đường ngoài bắt đầu ngập (Đập Đá +1.80m): Nhà 1 tầng cần SƠ TÁN SỚM ngay!`
+                        : (diffYardCm <= 0
+                            ? `Nước đã vào sân ${Math.abs(diffYardCm)} cm (cách nền +${diffFloorCm} cm). Dời xe & kê cao đồ đạc.`
+                            : `Nước sắp tràn vào sân (cách sân +${diffYardCm} cm). Dời xe lên vùng cao trước khi ngập đường.`),
+                    subAction: is1Floor
+                        ? 'Không chờ nước vào sân mới đi! Đưa người già, trẻ nhỏ và xe máy tới nơi cao ráo ngay khi đường còn thông.'
+                        : 'Dời xe máy/ô tô lên chỗ cao, chuẩn bị kê cao tủ lạnh/máy giặt và mang đồ thiết yếu lên tầng 2.',
+                    floorLabel: `Cách nền +${diffFloorCm}cm`,
+                    yardLabel: diffYardCm <= 0 ? `Ngập sân ${Math.abs(diffYardCm)}cm` : `Cách sân +${diffYardCm}cm`,
+                    color: is1Floor ? '#DC2626' : '#EA580C',
+                    boxClass: is1Floor ? 'bg-red-50/90 border-red-200' : 'bg-orange-50/90 border-orange-200',
+                    etaText
+                };
+            } else if (currentLvl >= st.bd1) {
+                return {
+                    key: 'watch',
+                    officialTier,
+                    needEarly1FloorEvac,
+                    heroBadge: 'THEO DÕI: BÁO ĐỘNG I',
+                    shortBadge: `BĐ I (+${diffFloorCm}cm)`,
+                    plainAdvice: is1Floor
+                        ? `Còn cách nền +${diffFloorCm} cm • Nhà 1 tầng sẵn sàng phương án sơ tán sớm nếu nước tiếp tục lên.`
+                        : `Còn cách nền +${diffFloorCm} cm • Nước bắt đầu dâng vùng trũng ven sông.`,
+                    subAction: is1Floor
+                        ? 'Chuẩn bị túi thoát hiểm, xác định trước tuyến đường cao ráo về điểm sơ tán (ĐH Sư phạm Huế).'
+                        : 'Khơi thông miệng cống, sạc đầy pin dự phòng và dọn gọn tầng 2 để sẵn sàng kê đồ.',
+                    floorLabel: `Cách nền +${diffFloorCm}cm`,
+                    yardLabel: `Cách sân +${diffYardCm}cm`,
+                    color: '#EAB308',
+                    boxClass: 'bg-amber-50/90 border-amber-200',
+                    etaText
+                };
+            } else {
+                return {
+                    key: 'safe',
+                    officialTier,
+                    needEarly1FloorEvac: false,
+                    heroBadge: 'AN TOÀN',
+                    shortBadge: `An toàn (+${diffFloorCm}cm)`,
+                    plainAdvice: `Còn cách nền nhà +${diffFloorCm} cm • Sân và nền nhà khô ráo hoàn toàn.`,
+                    subAction: is1Floor
+                        ? 'Nhà 1 tầng (Tầng trệt) đang an toàn. Kiểm tra sẵn túi thoát hiểm và lộ trình sơ tán gần nhất.'
+                        : 'Nhà 2 tầng đang an toàn. Theo dõi bản tin mưa lũ Hue-S cập nhật 30 phút/lần.',
+                    floorLabel: `Cách nền +${diffFloorCm}cm`,
+                    yardLabel: `Cách sân +${diffYardCm}cm`,
+                    color: '#16A34A',
+                    boxClass: 'bg-emerald-50/90 border-emerald-200',
+                    etaText
+                };
+            }
+        }
+
+        // =====================================================================
+        // 3. BẢN ĐỒ GIS HUẾ (LEAFLET 1.9.4 + OSM/ESRI + RESIZE OBSERVER)
+        // =====================================================================
+        function initHueMap() {
+            map = L.map('hueGisMap', {
+                zoomControl: false,
+                attributionControl: true
+            }).setView([state.lat, state.lng], 14);
+
+            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            });
+
+            const esriLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: 'Esri & OpenStreetMap'
+            });
+
+            osmLayer.on('tileerror', () => {
+                if (!map.hasLayer(esriLayer)) {
+                    esriLayer.addTo(map);
+                }
+            });
+
+            osmLayer.addTo(map);
+
+            layers.zones = L.layerGroup().addTo(map);
+            layers.stations = L.layerGroup().addTo(map);
+            layers.hazards = L.layerGroup().addTo(map);
+            layers.shelters = L.layerGroup().addTo(map);
+            layers.house = L.layerGroup().addTo(map);
+            layers.route = L.layerGroup().addTo(map);
+
+            map.on('click', (e) => {
+                if (!isPinMode) return;
+                state.lat = +e.latlng.lat.toFixed(6);
+                state.lng = +e.latlng.lng.toFixed(6);
+                state.address = `Vị trí đã ghim (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
+                persistState();
+                togglePinMode(false);
+                refreshAllViews();
+                showPushBanner('Đã cập nhật vị trí ngôi nhà', `Tọa độ mới: ${state.lat}, ${state.lng}`, '#1B4D3E');
+            });
+
+            const mapEl = document.getElementById('hueGisMap');
+            if (window.ResizeObserver && mapEl) {
+                const ro = new ResizeObserver(() => {
+                    if (map) map.invalidateSize();
+                });
+                ro.observe(mapEl);
+            }
+        }
+
+        function renderGisLayers() {
+            if (!map) return;
+            layers.zones.clearLayers();
+            layers.stations.clearLayers();
+            layers.hazards.clearLayers();
+            layers.shelters.clearLayers();
+            layers.house.clearLayers();
+
+            if (state.showFloodZones && state.kimLongLevel > 0) {
+                FLOOD_RISK_ZONES.forEach(z => {
+                    if (state.kimLongLevel >= z.trigger) {
+                        const expand = (state.kimLongLevel - z.trigger) * 145;
+                        L.circle([z.lat, z.lng], {
+                            radius: z.radius + expand,
+                            color: '#DC2626',
+                            weight: 1.5,
+                            fillColor: '#EF4444',
+                            fillOpacity: 0.22
+                        }).bindTooltip(`${z.name} (Nguy cơ ngập)`).addTo(layers.zones);
+                    }
+                });
+            }
+
+            IMPASSABLE_ROADS.forEach(road => {
+                if (state.kimLongLevel >= road.trigger) {
+                    const warnHtml = `
+                        <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full">
+                            <div class="px-2 py-0.5 rounded-lg bg-red-600 text-white text-[9.5px] font-extrabold whitespace-nowrap shadow-md border border-white">
+                                ⚠ ${road.name}
+                            </div>
+                            <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-600"></div>
+                        </div>
+                    `;
+                    L.marker([road.lat, road.lng], { icon: L.divIcon({ html: warnHtml, iconSize: [0, 0] }) }).addTo(layers.hazards);
+                }
+            });
+
+            HYDRO_STATIONS.forEach(st => {
+                const lvl = getStationLevel(st).toFixed(2);
+                const active = st.id === state.stationId;
+                const stHtml = `
+                    <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full">
+                        <div class="px-2 py-1 rounded-xl ${active ? 'bg-[#1B4D3E] text-white' : 'bg-white/95 text-[#1B4D3E]'} text-[10px] font-extrabold whitespace-nowrap shadow-md border border-[#1B4D3E]/25">
+                            ${st.name}: ${lvl}m
+                        </div>
+                        <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] ${active ? 'border-t-[#1B4D3E]' : 'border-t-white'}"></div>
+                    </div>
+                `;
+                L.marker([st.lat, st.lng], { icon: L.divIcon({ html: stHtml, iconSize: [0, 0] }) }).addTo(layers.stations);
+            });
+
+            const bridgeHtml = `
+                <div class="px-2 py-0.5 rounded-lg bg-[#4A148C] text-white text-[9.5px] font-bold whitespace-nowrap shadow-sm -translate-x-1/2 -translate-y-1/2">
+                    Cầu Trường Tiền
+                </div>
+            `;
+            L.marker([16.4689, 107.5887], { icon: L.divIcon({ html: bridgeHtml, iconSize: [0, 0] }) }).addTo(layers.stations);
+
+            EVAC_SHELTERS.forEach((sh, idx) => {
+                const isChosen = idx === state.selectedShelterIdx;
+                const shHtml = `
+                    <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer">
+                        <div class="px-2.5 py-1 rounded-xl ${isChosen ? 'bg-[#16A34A] text-white' : 'bg-white text-[#16A34A]'} text-[10px] font-extrabold whitespace-nowrap shadow-md border border-[#16A34A]">
+                            Điểm sơ tán: ${sh.short}
+                        </div>
+                        <div class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] ${isChosen ? 'border-t-[#16A34A]' : 'border-t-white'}"></div>
+                    </div>
+                `;
+                const m = L.marker([sh.lat, sh.lng], { icon: L.divIcon({ html: shHtml, iconSize: [0, 0] }) });
+                m.on('click', () => selectShelter(idx));
+                m.addTo(layers.shelters);
+            });
+
+            const flood = evaluateHouseholdFlood();
+            const typeTag = state.houseType === '1floor' ? '1 tầng' : '2 tầng';
+            const houseHtml = `
+                <div class="relative flex flex-col items-center -translate-x-1/2 -translate-y-1/2 cursor-grab">
+                    <div class="absolute w-12 h-12 rounded-full radar-pulse" style="background-color: ${flood.color};"></div>
+                    <div class="mb-1 px-2 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-extrabold whitespace-nowrap shadow-md">
+                        Nhà ${typeTag} • ${flood.shortBadge}
+                    </div>
+                    <div class="relative w-9 h-9 rounded-full text-white flex items-center justify-center shadow-lg border-2 border-white" style="background-color: ${flood.color};">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </div>
+                </div>
+            `;
+            const houseMarker = L.marker([state.lat, state.lng], {
+                icon: L.divIcon({ html: houseHtml, iconSize: [0, 0] }),
+                draggable: true
+            });
+            houseMarker.on('dragend', (e) => {
+                const pos = e.target.getLatLng();
+                state.lat = +pos.lat.toFixed(6);
+                state.lng = +pos.lng.toFixed(6);
+                state.address = `Vị trí kéo ghim (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
+                persistState();
+                refreshAllViews();
+                if (!document.getElementById('evacRouteCard').classList.contains('hidden')) {
+                    showEvacRoute();
+                }
+            });
+            houseMarker.addTo(layers.house);
+        }
+
+        function jumpToNeighborhood(index) {
+            const item = HUE_NEIGHBORHOODS[index];
+            if (!item) return;
+            state.lat = item.lat;
+            state.lng = item.lng;
+            state.address = item.address;
+            state.stationId = item.station;
+            persistState();
+
+            document.querySelectorAll('.neighborhood-pill').forEach((btn, idx) => {
+                btn.className = idx === index
+                    ? 'neighborhood-pill px-2.5 py-1 rounded-full bg-[#1B4D3E] text-white text-[11px] font-bold whitespace-nowrap'
+                    : 'neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap';
+            });
+
+            refreshAllViews();
+            if (map) map.setView([state.lat, state.lng], 15);
+            showPushBanner('Đã chuyển khu vực định vị', item.address, '#1B4D3E');
+        }
+
+        function togglePinMode(enable) {
+            isPinMode = enable;
+            document.getElementById('pinModeBanner').classList.toggle('hidden', !enable);
+            document.getElementById('mapTopControls').classList.toggle('hidden', enable);
+        }
+
+        function toggleFloodLayer() {
+            state.showFloodZones = !state.showFloodZones;
+            const btn = document.getElementById('btnFloodLayer');
+            btn.className = state.showFloodZones
+                ? 'px-2.5 py-1.5 rounded-xl bg-[#1B4D3E] text-white flex items-center gap-1 whitespace-nowrap'
+                : 'px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center gap-1 whitespace-nowrap';
+            renderGisLayers();
+        }
+
+        function locateMyGPS() {
+            if (!navigator.geolocation) {
+                if (map) map.setView([state.lat, state.lng], 15);
+                return;
+            }
+            showPushBanner('Đang xác định tọa độ GPS...', 'Đang lấy vị trí hiện tại của thiết bị tại Huế.', '#1B4D3E');
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    state.lat = +pos.coords.latitude.toFixed(6);
+                    state.lng = +pos.coords.longitude.toFixed(6);
+                    state.address = `Tọa độ GPS (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
+                    persistState();
+                    refreshAllViews();
+                    if (map) map.setView([state.lat, state.lng], 16);
+                    showPushBanner('Đã định vị ngôi nhà qua GPS', state.address, '#16A34A');
+                },
+                () => {
+                    if (map) map.setView([state.lat, state.lng], 15);
+                    showPushBanner('Sử dụng vị trí đã lưu', state.address, '#1B4D3E');
+                },
+                { timeout: 5000 }
+            );
+        }
+
+        function selectShelter(idx) {
+            state.selectedShelterIdx = idx;
+            document.querySelectorAll('.shelter-btn').forEach((btn, i) => {
+                btn.className = i === idx
+                    ? 'shelter-btn py-1 px-1.5 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold truncate'
+                    : 'shelter-btn py-1 px-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold truncate';
+            });
+            showEvacRoute();
+        }
+
+        function showEvacRoute() {
+            if (!map) return;
+            layers.route.clearLayers();
+            const shelter = EVAC_SHELTERS[state.selectedShelterIdx] || EVAC_SHELTERS[0];
+            document.getElementById('evacShelterTitle').textContent = shelter.name;
+
+            const midLat = (state.lat + shelter.lat) / 2 + 0.0012;
+            const midLng = (state.lng + shelter.lng) / 2 - 0.0012;
+            const waypoints = [
+                [state.lat, state.lng],
+                [midLat, midLng],
+                [shelter.lat, shelter.lng]
+            ];
+
+            L.polyline(waypoints, {
+                color: '#16A34A',
+                weight: 5,
+                opacity: 0.92,
+                dashArray: '8 6'
+            }).addTo(layers.route);
+
+            const dLat = (shelter.lat - state.lat) * 111;
+            const dLng = (shelter.lng - state.lng) * 106;
+            const distKm = Math.max(0.3, Math.sqrt(dLat * dLat + dLng * dLng) * 1.18).toFixed(1);
+            const driveMins = Math.max(2, Math.round((distKm / 20) * 60));
+            const walkMins = Math.max(4, Math.round((distKm / 4.5) * 60));
+
+            const roadCutoffWarning = state.houseType === '1floor'
+                ? '<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Cần di chuyển SỚM trước khi Đập Đá (+1.80m) &amp; Bến Nghé (+3.20m) chia cắt!</div>'
+                : '<div>• Tuyến ưu tiên trục đường cao ráo, tránh Đập Đá (+1.80m) &amp; vùng trũng Bến Nghé.</div>';
+
+            document.getElementById('evacRouteDetails').innerHTML = `
+                <div class="font-extrabold text-[#16A34A]">Quãng đường: ${distKm} km • Đi xe ~${driveMins} phút (Đi bộ ~${walkMins} phút)</div>
+                ${roadCutoffWarning}
+            `;
+
+            document.getElementById('evacRouteCard').classList.remove('hidden');
+            renderGisLayers();
+            map.fitBounds(L.latLngBounds(waypoints), { padding: [90, 120] });
+        }
+
+        function clearEvacRoute() {
+            if (layers.route) layers.route.clearLayers();
+            document.getElementById('evacRouteCard').classList.add('hidden');
+        }
+
+        // =====================================================================
+        // 4. ĐỒNG BỘ GIAO DIỆN 5 TAB (1 SƠ ĐỒ DUY NHẤT + KẾ HOẠCH ĐƯỜNG)
+        // =====================================================================
+        function toggleHouseTypeQuick() {
+            state.houseType = state.houseType === '1floor' ? '2floor' : '1floor';
+            pendingHouseType = state.houseType;
+            persistState();
+            refreshAllViews();
+            const msg = state.houseType === '1floor'
+                ? 'Đã chuyển sang Nhà 1 tầng (Tầng trệt) — Bật cảnh báo sơ tán sớm.'
+                : 'Đã chuyển sang Nhà 2 tầng (Có tầng trên) — Ưu tiên kê đồ & rút lên tầng 2.';
+            showPushBanner('Đã đổi loại kiến trúc nhà', msg, state.houseType === '1floor' ? '#EA580C' : '#1B4D3E');
+        }
+
+        function selectSettingsHouseType(type) {
+            pendingHouseType = type === '1floor' ? '1floor' : '2floor';
+            updateSettingsHouseCards(pendingHouseType);
+        }
+
+        function updateSettingsHouseCards(type) {
+            const c1 = document.getElementById('cardHouseType1Floor');
+            const c2 = document.getElementById('cardHouseType2Floor');
+            const r1 = document.getElementById('radioHouse1Floor');
+            const r2 = document.getElementById('radioHouse2Floor');
+
+            if (type === '1floor') {
+                c1.className = 'p-3 rounded-2xl border-2 border-red-600 bg-red-50/70 cursor-pointer transition space-y-1.5';
+                r1.className = 'w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center flex-shrink-0';
+                r1.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i>';
+
+                c2.className = 'p-3 rounded-2xl border-2 border-slate-200 bg-[#F4F7F6] cursor-pointer transition space-y-1.5';
+                r2.className = 'w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center flex-shrink-0';
+                r2.innerHTML = '';
+            } else {
+                c2.className = 'p-3 rounded-2xl border-2 border-[#1B4D3E] bg-[#EBF3F0]/80 cursor-pointer transition space-y-1.5';
+                r2.className = 'w-5 h-5 rounded-full bg-[#1B4D3E] text-white flex items-center justify-center flex-shrink-0';
+                r2.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i>';
+
+                c1.className = 'p-3 rounded-2xl border-2 border-slate-200 bg-[#F4F7F6] cursor-pointer transition space-y-1.5';
+                r1.className = 'w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center flex-shrink-0';
+                r1.innerHTML = '';
+            }
+            safeLucide();
+        }
+
+        function refreshAllViews() {
+            const st = getActiveStation();
+            const stLvl = getStationLevel(st);
+            const flood = evaluateHouseholdFlood();
+            const is1Floor = state.houseType === '1floor';
+
+            // Top Header
+            document.getElementById('headerLiveMeta').textContent = `${st.name.replace('Trạm ', '')}: ${stLvl.toFixed(2)}m • Hue-S 30p/lần`;
+
+            // Hero Card
+            document.getElementById('heroStatusCard').style.borderTopColor = flood.color;
+            document.getElementById('heroOwnerName').textContent = `Hộ ${state.ownerName}`;
+            const typePill = document.getElementById('heroHouseTypePill');
+            typePill.textContent = is1Floor ? 'Nhà 1 tầng' : 'Nhà 2 tầng';
+            typePill.className = is1Floor
+                ? 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-700'
+                : 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E]';
+
+            document.getElementById('heroSpeedTag').textContent = `${state.risingSpeedCmHr > 0 ? '+' : ''}${state.risingSpeedCmHr} cm/h`;
+            document.getElementById('heroAddress').textContent = state.address;
+
+            document.getElementById('heroAlertBox').className = `p-3.5 rounded-2xl border space-y-1.5 ${flood.boxClass}`;
+            const badge = document.getElementById('heroStatusBadge');
+            badge.textContent = flood.heroBadge;
+            badge.style.backgroundColor = flood.color;
+            document.getElementById('heroOfficialBadge').textContent = flood.officialTier.label;
+            document.getElementById('heroPlainAdvice').textContent = flood.plainAdvice;
+            document.getElementById('heroSubActionNote').textContent = flood.subAction;
+
+            document.getElementById('heroStationLabel').textContent = st.name;
+            document.getElementById('heroRiverVal').textContent = stLvl.toFixed(2);
+            const bd3DiffCm = Math.round((stLvl - st.bd3) * 100);
+            document.getElementById('heroBd3Diff').textContent = bd3DiffCm >= 0 ? `Trên BĐ III +${bd3DiffCm}cm` : `Dưới BĐ III ${Math.abs(bd3DiffCm)}cm`;
+
+            document.getElementById('heroYardVal').textContent = state.yardLevel.toFixed(2);
+            document.getElementById('heroYardDiff').textContent = flood.yardLabel;
+
+            document.getElementById('heroFloorVal').textContent = state.floorLevel.toFixed(2);
+            document.getElementById('heroFloorDiff').textContent = flood.floorLabel;
+            document.getElementById('etaCountdownBadge').textContent = flood.etaText;
+
+            // Single House Cross-Section Diagram
+            document.getElementById('diagramHouseTypeBadge').textContent = is1Floor
+                ? 'Nhà 1 tầng • Tầng trệt'
+                : 'Nhà 2 tầng • Có tầng trên';
+            document.getElementById('diagramHouseTypeBadge').className = is1Floor
+                ? 'inline-block text-[10px] font-extrabold text-red-700'
+                : 'inline-block text-[10px] font-extrabold text-[#1B4D3E]';
+
+            document.getElementById('svgModel1Floor').classList.toggle('hidden', !is1Floor);
+            document.getElementById('svgModel2Floor').classList.toggle('hidden', is1Floor);
+            document.getElementById('svg1FloorEvacArrow').classList.toggle('hidden', !flood.needEarly1FloorEvac);
+
+            const captionEl = document.getElementById('svgHouseCaption');
+            captionEl.textContent = is1Floor
+                ? 'Nhà 1 tầng: Không có tầng trên — Phải sơ tán sớm'
+                : 'Nhà 2 tầng: Có tầng 2 kiên cố trú ẩn an toàn';
+            captionEl.className = is1Floor
+                ? 'font-extrabold text-red-700 truncate'
+                : 'font-bold text-slate-600 truncate';
+
+            // Water SVG Physics (0.00m -> y=200, yard -> y=158, floor -> y=132, 6.00m -> y=24)
+            const zeroY = 200;
+            const yardY = 158;
+            const floorY = 132;
+            let waterY = zeroY;
+
+            if (stLvl <= 0) {
+                waterY = zeroY;
+            } else if (stLvl <= state.yardLevel) {
+                const ratio = Math.max(0, stLvl / Math.max(0.5, state.yardLevel));
+                waterY = zeroY - ratio * (zeroY - yardY);
+            } else {
+                const spanM = Math.max(0.25, state.floorLevel - state.yardLevel);
+                const pxPerM = (yardY - floorY) / spanM;
+                waterY = Math.min(zeroY, Math.max(28, floorY + (state.floorLevel - stLvl) * pxPerM));
+            }
+
+            document.getElementById('svgFloorLabel').textContent = `Nền nhà: ${state.floorLevel.toFixed(2)}m`;
+            document.getElementById('svgYardLabel').textContent = `Mặt sân: ${state.yardLevel.toFixed(2)}m`;
+            document.getElementById('svgWaterFill').setAttribute('y', waterY);
+            document.getElementById('svgWaterFill').setAttribute('height', Math.max(3, 204 - waterY));
+            document.getElementById('svgWaterFill').setAttribute('fill', flood.color);
+            document.getElementById('svgWaterSurface').setAttribute('y1', waterY);
+            document.getElementById('svgWaterSurface').setAttribute('y2', waterY);
+            document.getElementById('svgWaterSurface').setAttribute('stroke', flood.color);
+
+            const tagY = Math.max(16, waterY - 20);
+            document.getElementById('svgWaterPill').setAttribute('y', tagY);
+            document.getElementById('svgWaterPill').setAttribute('fill', flood.color);
+            document.getElementById('svgWaterPillText').setAttribute('y', tagY + 11);
+            document.getElementById('svgWaterPillText').textContent = `Trạm: ${stLvl.toFixed(2)}m`;
+
+            // Dynamic Evacuation & Road Cut-off Plan Card
+            document.getElementById('evacPlanModeSub').textContent = is1Floor
+                ? 'Chế độ: Nhà 1 tầng (Cảnh báo di chuyển sớm trước khi ngập đường)'
+                : 'Chế độ: Nhà 2 tầng (Dời xe sớm, kê đồ & rút lên tầng 2 khi đường ngập)';
+            document.getElementById('earlyEvac1FloorBox').classList.toggle('hidden', !flood.needEarly1FloorEvac);
+            document.getElementById('retreat2FloorBox').classList.toggle('hidden', !(!is1Floor && state.kimLongLevel >= 2.50));
+
+            document.getElementById('roadCutoffList').innerHTML = ROAD_CUTOFF_MILESTONES.map(m => {
+                const isCut = state.kimLongLevel >= m.trigger;
+                return `
+                    <div class="p-2.5 rounded-xl border flex items-start justify-between gap-2 ${isCut ? 'bg-red-50/90 border-red-200' : 'bg-[#F4F7F6] border-slate-200/70'}">
+                        <div class="min-w-0">
+                            <div class="font-extrabold ${isCut ? 'text-red-700' : 'text-slate-800'}">${m.title}</div>
+                            <div class="text-[10.5px] ${isCut ? 'text-red-600' : 'text-slate-500'}">${m.detail}</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold font-mono-num flex-shrink-0 ${isCut ? 'bg-red-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}">
+                            ${isCut ? 'ĐÃ CHIA CẮT' : `Từ ${m.trigger.toFixed(2)}m`}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            // 4 Stations Grid
+            document.getElementById('stationsGrid').innerHTML = HYDRO_STATIONS.map(station => {
+                const lvl = getStationLevel(station);
+                const selected = station.id === state.stationId;
+                const tier = getOfficialAlertTier(station, lvl);
+                return `
+                    <button onclick="selectReferenceStation('${station.id}')" class="p-2.5 rounded-2xl text-left border transition ${selected ? 'bg-[#EBF3F0] border-[#1B4D3E] shadow-2xs' : 'bg-[#F4F7F6] border-transparent hover:border-slate-200'}">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="text-[11px] font-extrabold ${selected ? 'text-[#1B4D3E]' : 'text-slate-800'} truncate">${station.name}</span>
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold text-white" style="background-color: ${tier.color};">${tier.code}</span>
+                        </div>
+                        <div class="flex items-baseline justify-between mt-1">
+                            <span class="text-[15px] font-extrabold font-mono-num text-slate-900">${lvl.toFixed(2)}m</span>
+                            <span class="text-[10px] font-semibold text-slate-500">${station.river}</span>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            // Slider Readout
+            document.getElementById('sliderKimLongReadout').textContent = `${state.kimLongLevel.toFixed(2)} m`;
+            document.getElementById('waterLevelSlider').value = state.kimLongLevel.toFixed(2);
+
+            // Interactive Checklist & SMS Preview
+            renderActionChecklist(flood, st);
+
+            // Map Bottom Bar
+            document.getElementById('mapHouseStatusDot').style.backgroundColor = flood.color;
+            document.getElementById('mapHouseStatusTitle').textContent = `Nhà ${is1Floor ? '1 tầng' : '2 tầng'}: ${flood.heroBadge}`;
+            document.getElementById('mapHouseCoordsSub').textContent = `${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E • ${state.address}`;
+
+            // Needs & Kit Tabs
+            renderNeedsAndKitTabs();
+
+            // Settings Form
+            pendingHouseType = state.houseType;
+            updateSettingsHouseCards(pendingHouseType);
+            document.getElementById('cfgOwnerName').value = state.ownerName;
+            document.getElementById('cfgOwnerPhone').value = state.ownerPhone;
+            document.getElementById('cfgFamilyPhone').value = state.familyPhone || '';
+            document.getElementById('cfgAddress').value = state.address;
+            document.getElementById('cfgStationId').value = state.stationId;
+            document.getElementById('cfgFloorLevel').value = state.floorLevel.toFixed(2);
+            document.getElementById('cfgYardLevel').value = state.yardLevel.toFixed(2);
+            document.getElementById('cfgAutoAlert').checked = state.autoAlert;
+
+            renderGisLayers();
+            safeLucide();
+        }
+
+        function getSmsContentString() {
+            const st = getActiveStation();
+            const stLvl = getStationLevel(st);
+            const flood = evaluateHouseholdFlood();
+            const prefix = state.houseType === '1floor'
+                ? '[NHÀ 1 TẦNG - CẦN SƠ TÁN SỚM]'
+                : '[NHÀ 2 TẦNG - RÚT LÊN TẦNG 2]';
+            return `[HUE FLOODGUARD V1] ${prefix} Ho ${state.ownerName} (${state.address}): ${st.name} dat ${stLvl.toFixed(2)}m (${flood.officialTier.code}). ${flood.plainAdvice} LH: ${state.ownerPhone}.`;
+        }
+
+        function renderActionChecklist(flood, st) {
+            const is1Floor = state.houseType === '1floor';
+
+            const actions1Floor = {
+                safe: [
+                    { id: '1f_safe_1', text: `Dưới BĐ I (${st.name} < ${st.bd1.toFixed(2)}m): Sân và nền nhà 1 tầng khô ráo.` },
+                    { id: '1f_safe_2', text: 'Kiểm tra sẵn túi thoát hiểm, giấy tờ bọc kín và xác định điểm tránh trú cao tầng gần nhất.' }
+                ],
+                watch: [
+                    { id: '1f_watch_1', text: `BÁO ĐỘNG I (${st.river} ≥ ${st.bd1.toFixed(2)}m): Theo dõi sát Hue-S, khơi thông cống rãnh quanh nhà.` },
+                    { id: '1f_watch_2', text: 'Nhà 1 tầng: Chuẩn bị hành lý gọn nhẹ, liên hệ trước nhà người thân tầng cao để sẵn sàng sơ tán sớm.' }
+                ],
+                yard: [
+                    { id: '1f_yard_1', text: 'SƠ TÁN SỚM NGAY: Đưa người già, trẻ nhỏ và xe máy rời nhà 1 tầng trước khi Đập Đá (+1.80m) & đường ngoài ngập sâu!' },
+                    { id: '1f_yard_2', text: 'Kê nhanh đồ nhẹ lên bàn/giường, khóa cửa, ngắt cầu dao điện tổng và mang theo túi thoát hiểm.' }
+                ],
+                doorstep: [
+                    { id: '1f_door_1', text: 'KHẨN CẤP RỜI NHÀ 1 TẦNG: Không ở lại tầng trệt khi nước sát bậc cửa, di chuyển ngay theo tuyến đường cao ráo.' },
+                    { id: '1f_door_2', text: 'Ngắt cầu dao điện tổng, nhắn tin SMS báo vị trí tránh trú cho người thân.' }
+                ],
+                flooded: [
+                    { id: '1f_flood_1', text: 'Cúp cầu dao tổng, mặc áo phao/vật nổi ở vị trí cao nhất có thể.' },
+                    { id: '1f_flood_2', text: 'Không tự ý lội qua dòng nước chảy xiết; gọi ngay 112 / 115 để lực lượng cứu hộ tiếp cận.' }
+                ]
+            };
+
+            const actions2Floor = {
+                safe: [
+                    { id: '2f_safe_1', text: `Dưới BĐ I (${st.name} < ${st.bd1.toFixed(2)}m): Sân và tầng 1 khô ráo hoàn toàn.` },
+                    { id: '2f_safe_2', text: 'Kiểm tra túi thoát hiểm, sạc đầy pin dự phòng và dọn gọn tầng 2 để sẵn sàng kê đồ.' }
+                ],
+                watch: [
+                    { id: '2f_watch_1', text: `BÁO ĐỘNG I (${st.river} ≥ ${st.bd1.toFixed(2)}m): Khơi thông miệng cống, kiểm tra thoát nước quanh sân.` },
+                    { id: '2f_watch_2', text: 'Chuẩn bị nước sạch, thực phẩm dự trữ và kiểm tra cầu dao riêng cho tầng trệt.' }
+                ],
+                yard: [
+                    { id: '2f_yard_1', text: 'Dời ngay xe máy, ô tô lên vùng cao trước khi các cung đường ngoài bị ngập chia cắt.' },
+                    { id: '2f_yard_2', text: 'Kê cao tủ lạnh, máy giặt, đồ điện tử ở tầng trệt và chuyển lương thực/nước uống lên tầng 2.' }
+                ],
+                doorstep: [
+                    { id: '2f_door_1', text: 'Ngắt hoàn toàn aptomat điện tầng 1, khóa van bình gas.' },
+                    { id: '2f_door_2', text: 'Đưa người già, trẻ nhỏ và cả gia đình rút lên tầng 2 trú ẩn; tránh đi ra ngoài đường đang ngập sâu.' }
+                ],
+                flooded: [
+                    { id: '2f_flood_1', text: 'Cố thủ an toàn trên tầng 2, tuyệt đối không lội nước ra ngoài khi đường bị chia cắt.' },
+                    { id: '2f_flood_2', text: 'Giữ liên lạc với người thân qua SMS; gọi 112 / 115 nếu nước tiếp tục dâng cao bất thường.' }
+                ]
+            };
+
+            const list = (is1Floor ? actions1Floor[flood.key] : actions2Floor[flood.key]) || actions2Floor.safe;
+            const doneCount = list.filter(i => !!state.completedTasks[i.id]).length;
+            document.getElementById('checklistProgressLabel').textContent = `Đã hoàn thành ${doneCount}/${list.length} bước (${is1Floor ? 'Nhà 1 tầng' : 'Nhà 2 tầng'})`;
+
+            document.getElementById('householdChecklistContainer').innerHTML = list.map(item => {
+                const checked = !!state.completedTasks[item.id];
+                return `
+                    <div onclick="toggleActionTask('${item.id}')" class="flex items-start gap-2.5 p-2.5 rounded-xl cursor-pointer transition ${checked ? 'bg-emerald-50/70 border border-emerald-200' : 'bg-[#F4F7F6] hover:bg-[#EBF3F0]'}">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${checked ? 'bg-[#16A34A] text-white' : 'border-2 border-[#1B4D3E] bg-white'}">
+                            ${checked ? '<i data-lucide="check" class="w-2.5 h-2.5"></i>' : ''}
+                        </span>
+                        <span class="leading-snug font-medium ${checked ? 'line-through text-slate-400' : 'text-slate-800'}">${item.text}</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('smsMessagePreview').textContent = getSmsContentString();
+        }
+
+        function toggleActionTask(taskId) {
+            state.completedTasks[taskId] = !state.completedTasks[taskId];
+            persistState();
+            const st = getActiveStation();
+            renderActionChecklist(evaluateHouseholdFlood(), st);
+            safeLucide();
+        }
+
+        function openNativeSmsApp() {
+            const targetPhone = (state.familyPhone || state.ownerPhone || '').replace(/[^0-9+]/g, '');
+            const body = encodeURIComponent(getSmsContentString());
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const smsUrl = `sms:${targetPhone}${isIOS ? '&' : '?'}body=${body}`;
+            showPushBanner(`Đang mở tin nhắn SMS tới ${targetPhone || 'người thân'}`, 'Nội dung cảnh báo đã được điền sẵn.', '#1B4D3E');
+            window.location.href = smsUrl;
+        }
+
+        function renderNeedsAndKitTabs() {
+            document.getElementById('kitMemberCount').textContent = state.members.length;
+            document.getElementById('survivalHouseholdBadge').textContent = `${state.members.length} thành viên`;
+
+            document.getElementById('kitMembersList').innerHTML = state.members.map(m => {
+                let rateSummary = '3.0L nước • 0.4kg gạo • 2 gói khô/ngày';
+                if (m.role.includes('Trẻ em')) rateSummary = '2.0L nước • 0.25kg gạo • 1.5 gói khô/ngày';
+                else if (m.role.includes('cao tuổi')) rateSummary = '2.5L nước • 0.3kg gạo • 1.5 gói khô/ngày';
+
+                return `
+                    <div class="py-2.5 flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-extrabold text-slate-900">${m.name}</span>
+                                <span class="px-1.5 py-0.5 rounded-md bg-[#F4F7F6] text-[10px] font-bold text-[#1B4D3E]">${m.role}</span>
+                            </div>
+                            <div class="text-[10.5px] text-slate-500 mt-0.5">${rateSummary}</div>
+                        </div>
+                        ${state.members.length > 1 ? `
+                            <button onclick="removeMember('${m.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            const targetDays = Math.max(1, parseInt(state.reserveDays) || 7);
+            document.getElementById('customReserveDaysInput').value = targetDays;
+            [3, 5, 7].forEach(d => {
+                const btn = document.getElementById(`segDays${d}`);
+                if (btn) {
+                    btn.className = targetDays === d
+                        ? 'py-1.5 rounded-xl text-[11px] font-extrabold bg-white text-slate-900 shadow-2xs transition'
+                        : 'py-1.5 rounded-xl text-[11px] font-bold text-slate-600 transition';
+                }
+            });
+
+            let minDaysOverall = Infinity;
+            let limitingItemName = '';
+
+            document.getElementById('kitNeedsBars').innerHTML = state.supplies.map(sup => {
+                let dailyUsage = sup.perHouseholdDaily || 0;
+                state.members.forEach(m => {
+                    if (m.role.includes('Trẻ em')) dailyUsage += (sup.dailyChild || 0);
+                    else if (m.role.includes('cao tuổi')) dailyUsage += (sup.dailyElderly || 0);
+                    else dailyUsage += (sup.dailyAdult || 0);
+                });
+                dailyUsage = Math.max(0.1, dailyUsage);
+
+                const targetNeeded = +(dailyUsage * targetDays).toFixed(1);
+                const currentStock = Math.max(0, parseFloat(sup.current) || 0);
+                const estDays = +(currentStock / dailyUsage).toFixed(1);
+                const diffAmount = +(targetNeeded - currentStock).toFixed(1);
+                const pct = Math.min(100, Math.round((currentStock / Math.max(0.1, targetNeeded)) * 100));
+
+                if (estDays < minDaysOverall) {
+                    minDaysOverall = estDays;
+                    limitingItemName = sup.name;
+                }
+
+                const isShort = diffAmount > 0;
+                const barColor = estDays < 2 ? '#DC2626' : (isShort ? '#EA580C' : '#16A34A');
+                const badgeClass = estDays < 2
+                    ? 'bg-red-50 text-red-700 border-red-200'
+                    : (isShort ? 'bg-orange-50 text-orange-800 border-orange-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+
+                return `
+                    <div class="p-3 rounded-2xl bg-[#F4F7F6] border border-slate-200/75 space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-extrabold text-slate-900 truncate">${sup.name}</span>
+                                    ${sup.custom ? `
+                                        <button onclick="removeSupply('${sup.id}')" class="text-slate-400 hover:text-red-600" title="Xóa mục này">
+                                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                <div class="text-[10.5px] text-slate-500 mt-0.5">
+                                    Dùng: <span class="font-mono-num font-bold text-slate-700">${dailyUsage.toFixed(1)} ${sup.unit}/ngày</span> • Mục tiêu ${targetDays} ngày: <span class="font-mono-num font-bold text-slate-700">${targetNeeded} ${sup.unit}</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10.5px] font-extrabold font-mono-num border flex-shrink-0 ${badgeClass}">
+                                Đủ ${estDays} ngày
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-slate-200/80">
+                            <span class="text-[11px] font-bold text-slate-600">Hiện có:</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="adjustSupplyStock('${sup.id}', -${sup.step || 1})" class="w-7 h-7 rounded-lg bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] font-extrabold flex items-center justify-center active:scale-95">−</button>
+                                <input type="number" step="0.5" min="0" value="${currentStock}" onchange="setSupplyStock('${sup.id}', this.value)" class="w-16 py-1 px-1.5 rounded-lg bg-[#F4F7F6] border border-slate-200 text-center text-xs font-extrabold font-mono-num text-[#1B4D3E]">
+                                <button onclick="adjustSupplyStock('${sup.id}', ${sup.step || 1})" class="w-7 h-7 rounded-lg bg-[#1B4D3E] hover:bg-[#13382D] text-white font-extrabold flex items-center justify-center active:scale-95">+</button>
+                                <span class="text-[11px] font-bold text-slate-600 min-w-[42px]">${sup.unit}</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="w-full h-2 rounded-full bg-slate-200/80 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-300" style="width: ${pct}%; background-color: ${barColor};"></div>
+                            </div>
+                            <div class="flex items-center justify-between text-[10.5px] font-bold">
+                                <span class="text-slate-500">Đạt ${pct}% mục tiêu</span>
+                                <span style="color: ${barColor};">
+                                    ${isShort ? `Còn thiếu ${diffAmount} ${sup.unit}` : `Đạt chuẩn (Dư +${Math.abs(diffAmount)} ${sup.unit})`}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const safeMinDays = isFinite(minDaysOverall) ? minDaysOverall : 0;
+            const summaryCard = document.getElementById('survivalSummaryCard');
+            const minDaysEl = document.getElementById('survivalMinDaysVal');
+            const goalBadge = document.getElementById('survivalGoalComparison');
+            const limitingNote = document.getElementById('survivalLimitingNote');
+
+            minDaysEl.textContent = `${safeMinDays.toFixed(1)} ngày`;
+            if (safeMinDays >= targetDays) {
+                summaryCard.style.borderLeftColor = '#16A34A';
+                minDaysEl.style.color = '#16A34A';
+                goalBadge.className = 'text-[11px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full';
+                goalBadge.textContent = `Đạt mục tiêu ${targetDays} ngày`;
+                limitingNote.innerHTML = `Toàn bộ nhu yếu phẩm đều đủ dùng từ <strong>${safeMinDays.toFixed(1)} ngày</strong> trở lên cho ${state.members.length} thành viên.`;
+            } else {
+                const isCritical = safeMinDays < 2;
+                summaryCard.style.borderLeftColor = isCritical ? '#DC2626' : '#EA580C';
+                minDaysEl.style.color = isCritical ? '#DC2626' : '#EA580C';
+                goalBadge.className = isCritical
+                    ? 'text-[11px] font-extrabold text-red-700 bg-red-50 px-2.5 py-1 rounded-full'
+                    : 'text-[11px] font-extrabold text-orange-800 bg-orange-50 px-2.5 py-1 rounded-full';
+                goalBadge.textContent = `Thiếu ${(targetDays - safeMinDays).toFixed(1)} ngày so với mục tiêu`;
+                limitingNote.innerHTML = `Hết sớm nhất: <strong>${limitingItemName}</strong> (chỉ đủ dùng <strong>${safeMinDays.toFixed(1)} ngày</strong> cho ${state.members.length} người).`;
+            }
+
+            const readyCount = state.kitItems.filter(i => i.checked).length;
+            document.getElementById('kitReadyBadge').textContent = `${readyCount}/${state.kitItems.length} sẵn sàng`;
+            document.getElementById('kitChecklistItems').innerHTML = state.kitItems.map(item => `
+                <div onclick="toggleKitItem('${item.id}')" class="py-3 flex items-center gap-3 cursor-pointer">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition ${item.checked ? 'bg-[#1B4D3E] text-white' : 'border-2 border-slate-300 bg-white'}">
+                        ${item.checked ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}
+                    </span>
+                    <span class="text-xs font-semibold transition ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}">${item.name}</span>
+                </div>
+            `).join('');
+
+            const famPhone = state.familyPhone || state.ownerPhone;
+            document.getElementById('cardContactFamilyPhone').textContent = famPhone;
+            document.getElementById('cardCallFamilyLink').href = `tel:${famPhone.replace(/[^0-9+]/g, '')}`;
+        }
+
+        // =====================================================================
+        // 5. ĐIỀU HƯỚNG TAB, MÔ PHỎNG MỰC NƯỚC, CÒI BÁO ĐỘNG & CÁC MODAL
+        // =====================================================================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+            const view = document.getElementById(`view-${tabName}`);
+            if (view) view.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+                btn.className = 'nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl text-slate-500 hover:text-slate-900 font-semibold transition';
+            });
+            const activeBtn = document.getElementById(`tabBtn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = 'nav-tab-btn flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl bg-[#EBF3F0] text-[#1B4D3E] font-extrabold transition';
+            }
+
+            if (tabName === 'map' && map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                    map.setView([state.lat, state.lng], map.getZoom());
+                }, 120);
+            }
+        }
+
+        function selectReferenceStation(stId) {
+            state.stationId = stId;
+            persistState();
+            refreshAllViews();
+        }
+
+        function stepWaterLevel(delta) {
+            stopAutoSync();
+            const next = +Math.min(6.00, Math.max(0.00, state.kimLongLevel + delta)).toFixed(2);
+            onSliderWaterInput(next);
+        }
+
+        function onSliderWaterInput(val) {
+            const next = +Math.min(6.00, Math.max(0.00, parseFloat(val))).toFixed(2);
+            const prevFlood = evaluateHouseholdFlood().key;
+            state.kimLongLevel = next;
+            if (next === 0) state.risingSpeedCmHr = 0;
+            persistState();
+            refreshAllViews();
+            const nextFlood = evaluateHouseholdFlood().key;
+
+            const shouldAlarm = state.houseType === '1floor'
+                ? (nextFlood === 'yard' || nextFlood === 'doorstep' || nextFlood === 'flooded')
+                : (nextFlood === 'doorstep' || nextFlood === 'flooded');
+
+            if (state.autoAlert && prevFlood !== nextFlood && shouldAlarm) {
+                triggerEmergencyAlert(false);
+            }
+        }
+
+        function applyWaterPreset(lvl, speedCmHr) {
+            stopAutoSync();
+            state.kimLongLevel = +Math.min(6.00, Math.max(0.00, lvl)).toFixed(2);
+            state.risingSpeedCmHr = speedCmHr;
+            persistState();
+            refreshAllViews();
+            const flood = evaluateHouseholdFlood();
+            const shouldAlarm = state.houseType === '1floor'
+                ? (flood.key === 'yard' || flood.key === 'doorstep' || flood.key === 'flooded')
+                : (flood.key === 'doorstep' || flood.key === 'flooded');
+
+            if (state.autoAlert && shouldAlarm) {
+                triggerEmergencyAlert(false);
+            } else if (lvl === 0) {
+                showPushBanner('Đã đặt tất cả trạm về 0.00m', 'Trạng thái bình thường - An toàn tại tất cả trạm đo.', '#16A34A');
+            }
+        }
+
+        function toggleAutoSync() {
+            if (autoSyncTimer) {
+                stopAutoSync();
+            } else {
+                if (state.risingSpeedCmHr === 0) state.risingSpeedCmHr = 12;
+                document.getElementById('autoSyncLabel').textContent = 'Đang chạy...';
+                autoSyncTimer = setInterval(() => {
+                    if (state.kimLongLevel >= 5.81) state.risingSpeedCmHr = -12;
+                    else if (state.kimLongLevel <= 0.00) state.risingSpeedCmHr = 12;
+                    const deltaM = +(state.risingSpeedCmHr / 100).toFixed(2);
+                    state.kimLongLevel = +Math.min(6.00, Math.max(0.00, state.kimLongLevel + deltaM)).toFixed(2);
+                    const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('lastSyncTimestamp').textContent = `Đồng bộ Hue-S lúc ${nowStr} (30p/lần)`;
+                    persistState();
+                    refreshAllViews();
+                }, 2200);
+            }
+        }
+
+        function stopAutoSync() {
+            if (autoSyncTimer) {
+                clearInterval(autoSyncTimer);
+                autoSyncTimer = null;
+            }
+            document.getElementById('autoSyncLabel').textContent = '30p/lần';
+        }
+
+        function triggerEmergencyAlert(isSmsAction) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    const now = ctx.currentTime;
+                    [0, 0.22, 0.44].forEach((offset, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(idx === 2 ? 960 : 760, now + offset);
+                        gain.gain.setValueAtTime(0.001, now + offset);
+                        gain.gain.exponentialRampToValueAtTime(0.24, now + offset + 0.03);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.18);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + offset);
+                        osc.stop(now + offset + 0.19);
+                    });
+                }
+            } catch (e) {}
+
+            const st = getActiveStation();
+            const flood = evaluateHouseholdFlood();
+            showPushBanner(
+                isSmsAction ? `Đã gửi SMS tới ${state.ownerPhone}` : `Còi báo động • ${flood.heroBadge}`,
+                `${st.name}: ${getStationLevel(st).toFixed(2)}m • ${flood.plainAdvice}`,
+                flood.color
+            );
+        }
+
+        function copySmsMessage() {
+            const text = document.getElementById('smsMessagePreview').textContent;
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+            showPushBanner('Đã sao chép nội dung SMS', 'Sẵn sàng dán và gửi qua Tin nhắn / Zalo.', '#1B4D3E');
+        }
+
+        let bannerTimeout = null;
+        function showPushBanner(title, body, accentColor) {
+            const banner = document.getElementById('iosPushBanner');
+            document.getElementById('pushBannerTitle').textContent = title;
+            document.getElementById('pushBannerBody').textContent = body;
+            document.getElementById('pushBannerIconBox').style.backgroundColor = accentColor || '#1B4D3E';
+            banner.classList.remove('hidden');
+            clearTimeout(bannerTimeout);
+            bannerTimeout = setTimeout(() => banner.classList.add('hidden'), 4200);
+        }
+
+        function hidePushBanner() {
+            document.getElementById('iosPushBanner').classList.add('hidden');
+        }
+
+        // Settings Form Handlers
+        function autoSyncYardInput(floorVal) {
+            const fl = parseFloat(floorVal);
+            if (!isNaN(fl) && fl > 0.5) {
+                document.getElementById('cfgYardLevel').value = Math.max(0.2, +(fl - 0.84).toFixed(2)).toFixed(2);
+            }
+        }
+
+        function fillPreset2023() {
+            document.getElementById('cfgFloorLevel').value = '4.34';
+            document.getElementById('cfgYardLevel').value = '3.50';
+            showPushBanner('Đã chọn mốc 15/11/2023 (4.34m)', 'Mốc tràn nền: 4.34m • Mốc vào sân: 3.50m', '#1B4D3E');
+        }
+
+        function fillPreset2025() {
+            document.getElementById('cfgFloorLevel').value = '5.05';
+            document.getElementById('cfgYardLevel').value = '4.21';
+            showPushBanner('Đã chọn mốc 27/10/2025 (5.05m)', 'Mốc tràn nền: 5.05m • Mốc vào sân: 4.21m', '#DC2626');
+        }
+
+        function saveHouseholdConfig(e) {
+            e.preventDefault();
+            state.houseType = pendingHouseType;
+            state.ownerName = document.getElementById('cfgOwnerName').value.trim();
+            state.ownerPhone = document.getElementById('cfgOwnerPhone').value.trim();
+            state.familyPhone = document.getElementById('cfgFamilyPhone').value.trim();
+            state.address = document.getElementById('cfgAddress').value.trim();
+            state.stationId = document.getElementById('cfgStationId').value;
+            state.floorLevel = parseFloat(document.getElementById('cfgFloorLevel').value);
+            state.yardLevel = parseFloat(document.getElementById('cfgYardLevel').value);
+            state.autoAlert = document.getElementById('cfgAutoAlert').checked;
+            persistState();
+            refreshAllViews();
+            switchTab('alert');
+            const label = state.houseType === '1floor' ? 'Nhà 1 tầng (Tầng trệt)' : 'Nhà 2 tầng (Có tầng trên)';
+            showPushBanner('Đã lưu thiết lập hộ gia đình', `${label} • Ngưỡng cảnh báo đã cập nhật.`, '#16A34A');
+        }
+
+        // Reset Modal
+        function openResetModal() { document.getElementById('resetModal').classList.remove('hidden'); safeLucide(); }
+        function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
+        function confirmResetApp() {
+            stopAutoSync();
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            pendingHouseType = state.houseType;
+            persistState();
+            closeResetModal();
+            refreshAllViews();
+            if (map) map.setView([state.lat, state.lng], 14);
+            switchTab('alert');
+            showPushBanner('Đã đặt lại mặc định', 'Dữ liệu ứng dụng đã khôi phục về trạng thái ban đầu.', '#1B4D3E');
+        }
+
+        // Needs & Go-Bag Handlers
+        function setReserveDays(days) {
+            state.reserveDays = Math.min(30, Math.max(1, parseInt(days) || 7));
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function adjustSupplyStock(id, delta) {
+            const sup = state.supplies.find(s => s.id === id);
+            if (!sup) return;
+            sup.current = +Math.max(0, (parseFloat(sup.current) || 0) + delta).toFixed(1);
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function setSupplyStock(id, rawVal) {
+            const sup = state.supplies.find(s => s.id === id);
+            if (!sup) return;
+            const val = parseFloat(rawVal);
+            sup.current = isNaN(val) ? 0 : +Math.max(0, val).toFixed(1);
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function openSupplyModal() { document.getElementById('supplyModal').classList.remove('hidden'); safeLucide(); }
+        function closeSupplyModal() { document.getElementById('supplyModal').classList.add('hidden'); }
+        function confirmAddSupply() {
+            const name = document.getElementById('newSupplyName').value.trim();
+            const unit = document.getElementById('newSupplyUnit').value.trim() || 'đơn vị';
+            const current = Math.max(0, parseFloat(document.getElementById('newSupplyCurrent').value) || 0);
+            const daily = Math.max(0.1, parseFloat(document.getElementById('newSupplyDailyPerPerson').value) || 0.5);
+            if (!name) return;
+
+            state.supplies.push({
+                id: 'sup_' + Date.now(),
+                name,
+                unit,
+                current,
+                step: 1,
+                dailyAdult: daily,
+                dailyChild: +(daily * 0.7).toFixed(2),
+                dailyElderly: +(daily * 0.85).toFixed(2),
+                perHouseholdDaily: 0,
+                custom: true
+            });
+
+            document.getElementById('newSupplyName').value = '';
+            document.getElementById('newSupplyUnit').value = '';
+            closeSupplyModal();
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+            showPushBanner('Đã thêm nhu yếu phẩm', `${name} (${current} ${unit}) đã được tính vào dự trữ.`, '#1B4D3E');
+        }
+
+        function removeSupply(id) {
+            state.supplies = state.supplies.filter(s => s.id !== id);
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function toggleKitItem(id) {
+            const item = state.kitItems.find(i => i.id === id);
+            if (item) {
+                item.checked = !item.checked;
+                persistState();
+                renderNeedsAndKitTabs();
+                safeLucide();
+            }
+        }
+
+        function openMemberModal() { document.getElementById('memberModal').classList.remove('hidden'); safeLucide(); }
+        function closeMemberModal() { document.getElementById('memberModal').classList.add('hidden'); }
+        function confirmAddMember() {
+            const name = document.getElementById('newMemberName').value.trim();
+            const role = document.getElementById('newMemberRole').value;
+            if (!name) return;
+            state.members.push({ id: 'm' + Date.now(), name, role });
+            document.getElementById('newMemberName').value = '';
+            closeMemberModal();
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function removeMember(id) {
+            state.members = state.members.filter(m => m.id !== id);
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function openBagItemModal() { document.getElementById('bagItemModal').classList.remove('hidden'); safeLucide(); }
+        function closeBagItemModal() { document.getElementById('bagItemModal').classList.add('hidden'); }
+        function confirmAddBagItem() {
+            const title = document.getElementById('newBagItemTitle').value.trim();
+            if (!title) return;
+            state.kitItems.push({ id: 'k' + Date.now(), name: title, checked: false });
+            document.getElementById('newBagItemTitle').value = '';
+            closeBagItemModal();
+            persistState();
+            renderNeedsAndKitTabs();
+            safeLucide();
+        }
+
+        function openAboutModal() { document.getElementById('aboutModal').classList.remove('hidden'); safeLucide(); }
+        function closeAboutModal() { document.getElementById('aboutModal').classList.add('hidden'); }
+
+        window.onload = function () {
+            initHueMap();
+            refreshAllViews();
+        };
+    </script>
+</body>
+</html>
