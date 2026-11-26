@@ -2464,38 +2464,45 @@
             }
             document.getElementById('autoSyncLabel').textContent = '30p/lần';
         }
+let sharedAudioCtx = null;
 
-        function triggerEmergencyAlert(isSmsAction) {
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    const ctx = new AudioCtx();
-                    const now = ctx.currentTime;
-                    [0, 0.22, 0.44].forEach((offset, idx) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(idx === 2 ? 960 : 760, now + offset);
-                        gain.gain.setValueAtTime(0.001, now + offset);
-                        gain.gain.exponentialRampToValueAtTime(0.24, now + offset + 0.03);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.18);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(now + offset);
-                        osc.stop(now + offset + 0.19);
-                    });
-                }
-            } catch (e) {}
-
-            const st = getActiveStation();
-            const flood = evaluateHouseholdFlood();
-            showPushBanner(
-                isSmsAction ? `Đã gửi SMS tới ${state.ownerPhone}` : `Còi báo động • ${flood.heroBadge}`,
-                `${st.name}: ${getStationLevel(st).toFixed(2)}m • ${flood.plainAdvice}`,
-                flood.color
-            );
+function triggerEmergencyAlert(isSmsAction) {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!sharedAudioCtx) {
+            sharedAudioCtx = new AudioCtx();
+        }
+        // Bắt buộc trên iPhone/iOS để mở khóa âm thanh
+        if (sharedAudioCtx.state === 'suspended') {
+            sharedAudioCtx.resume();
         }
 
+        const now = sharedAudioCtx.currentTime;
+        // Phát 3 nhịp còi hú rõ hơn (dùng sóng triangle/sawtooth)
+        [0, 0.28, 0.56].forEach((offset, idx) => {
+            const osc = sharedAudioCtx.createOscillator();
+            const gain = sharedAudioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(idx === 2 ? 1050 : 820, now + offset);
+            gain.gain.setValueAtTime(0.001, now + offset);
+            gain.gain.exponentialRampToValueAtTime(0.6, now + offset + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.22);
+            osc.connect(gain);
+            gain.connect(sharedAudioCtx.destination);
+            osc.start(now + offset);
+            osc.stop(now + offset + 0.24);
+        });
+    } catch (e) {}
+
+    const st = getActiveStation();
+    const flood = evaluateHouseholdFlood();
+    showPushBanner(
+        isSmsAction ? `Đã gửi SMS tới ${state.ownerPhone}` : `Còi báo động • ${flood.heroBadge}`,
+        `${st.name}: ${getStationLevel(st).toFixed(2)}m • ${flood.plainAdvice}`,
+        flood.color
+    );
+}
+        
         function copySmsMessage() {
             const text = document.getElementById('smsMessagePreview').textContent;
             const ta = document.createElement('textarea');
