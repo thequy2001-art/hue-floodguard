@@ -551,69 +551,121 @@
                     <div id="roadCutoffList" class="space-y-1.5 text-[11px]"></div>
                 </div>
 
-                <!-- 4. BẢNG 4 TRẠM THỦY VĂN HUẾ & BỘ MÔ PHỎNG MỰC NƯỚC (0.00M – 6.00M) -->
+                <!-- 4. BẢNG 4 TRẠM THỦY VĂN ĐỘC LẬP: CHẾ ĐỘ MÔ PHỎNG VS API HUE-S THỜI GIAN THỰC -->
                 <div class="sonalog-card p-3.5 space-y-3">
                     <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-lg bg-[#EBF3F0] text-[#1B4D3E] flex items-center justify-center flex-shrink-0">
                                 <i data-lucide="radio" class="w-3.5 h-3.5"></i>
                             </span>
-                            <div>
-                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-800">Trạm đo &amp; Mô phỏng Hue-S</h2>
-                                <p id="lastSyncTimestamp" class="text-[10px] text-slate-500">Tự động cập nhật 30 phút/lần</p>
+                            <div class="min-w-0">
+                                <h2 class="text-xs font-extrabold uppercase tracking-wide text-slate-800 truncate">4 Trạm Thủy Văn Độc Lập</h2>
+                                <p id="lastSyncTimestamp" class="text-[10px] text-slate-500 truncate">Chế độ mô phỏng độc lập từng trạm</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="applyWaterPreset(0.00, 0)" class="px-2 py-1 rounded-full bg-[#F4F7F6] hover:bg-[#EBF3F0] text-[#1B4D3E] text-[10.5px] font-extrabold border border-slate-200 transition active:scale-95">
-                                Về 0.00m
-                            </button>
-                            <button id="btnAutoSync" onclick="toggleAutoSync()" class="px-2.5 py-1 rounded-full bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] text-[10.5px] font-extrabold flex items-center gap-1 border border-[#1B4D3E]/20 transition">
-                                <span id="autoSyncDot" class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                                <span id="autoSyncLabel">30p/lần</span>
-                            </button>
-                        </div>
+                        <button onclick="resetAllStationsZero()" class="px-2.5 py-1 rounded-full bg-[#F4F7F6] hover:bg-[#EBF3F0] text-[#1B4D3E] text-[10.5px] font-extrabold border border-slate-200 transition active:scale-95 flex-shrink-0">
+                            Về 0.00m tất cả
+                        </button>
                     </div>
 
-                    <!-- 4 Thẻ Trạm Quan Trắc -->
+                    <!-- Bộ chuyển đổi 2 Kịch bản: (1) Mô phỏng vs (2) API Hue-S Thời gian thực -->
+                    <div class="bg-[#EEF2F0] p-1 rounded-2xl grid grid-cols-2 gap-1">
+                        <button id="btnModeSim" onclick="setDataSourceMode('simulation')" class="py-1.5 px-2 rounded-xl text-[11px] font-extrabold bg-white text-[#1B4D3E] shadow-2xs flex items-center justify-center gap-1 transition">
+                            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                            <span>1. Mô phỏng (Tự chỉnh)</span>
+                        </button>
+                        <button id="btnModeLive" onclick="setDataSourceMode('realtime')" class="py-1.5 px-2 rounded-xl text-[11px] font-bold text-slate-600 flex items-center justify-center gap-1 transition">
+                            <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+                            <span>2. API Hue-S Thực tế</span>
+                        </button>
+                    </div>
+
+                    <!-- 4 Thẻ Trạm Quan Trắc Độc Lập (Chạm để chọn trạm điều khiển) -->
                     <div id="stationsGrid" class="grid grid-cols-2 gap-2"></div>
 
-                    <!-- Thanh trượt mô phỏng mực nước (0.00m - 6.00m) + Nút tinh chỉnh -->
-                    <div class="pt-1 space-y-2.5 border-t border-slate-100">
-                        <div class="flex items-center justify-between text-[11px]">
-                            <span class="font-bold text-slate-700">Kéo thử mực nước Sông Hương:</span>
-                            <div class="flex items-center gap-1.5">
+                    <!-- KHỐI ĐIỀU KHIỂN KỊCH BẢN 1: MÔ PHỎNG ĐỘC LẬP TỪNG TRẠM -->
+                    <div id="simulationControlBox" class="pt-1.5 space-y-2.5 border-t border-slate-100">
+                        <div class="flex items-center justify-between gap-2 text-[11px]">
+                            <span class="font-extrabold text-slate-800 truncate" id="sliderStationPrompt">Mực nước Trạm Kim Long:</span>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
                                 <button onclick="stepWaterLevel(-0.05)" class="px-2.5 py-1 rounded-lg bg-[#F4F7F6] hover:bg-[#EBF3F0] border border-slate-200 font-mono-num font-extrabold text-slate-800 active:scale-95">-0.05</button>
-                                <span class="font-mono-num font-extrabold text-[#1B4D3E] text-xs min-w-[54px] text-center" id="sliderKimLongReadout">0.00 m</span>
+                                <span class="font-mono-num font-extrabold text-[#1B4D3E] text-xs min-w-[54px] text-center" id="sliderActiveStationReadout">0.00 m</span>
                                 <button onclick="stepWaterLevel(0.05)" class="px-2.5 py-1 rounded-lg bg-[#F4F7F6] hover:bg-[#EBF3F0] border border-slate-200 font-mono-num font-extrabold text-slate-800 active:scale-95">+0.05</button>
                             </div>
                         </div>
+
                         <input type="range" id="waterLevelSlider" min="0.00" max="6.00" step="0.01" value="0.00" class="forest-slider" oninput="onSliderWaterInput(this.value)">
 
+                        <!-- Chạy mô phỏng tăng/giảm tự động cho trạm đang chọn -->
+                        <div class="flex items-center justify-between gap-2 bg-[#F4F7F6] p-2 rounded-xl border border-slate-200/80">
+                            <span class="text-[10.5px] font-bold text-slate-600">Chạy tự động trạm đang chọn:</span>
+                            <div class="flex items-center gap-1">
+                                <button id="btnSimRise" onclick="toggleSimAutoTrend('rise')" class="px-2 py-1 rounded-lg bg-white hover:bg-orange-50 border border-slate-200 text-[10px] font-extrabold text-orange-700 flex items-center gap-1">
+                                    <i data-lucide="trending-up" class="w-3 h-3"></i> Tăng dần
+                                </button>
+                                <button id="btnSimFall" onclick="toggleSimAutoTrend('fall')" class="px-2 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 text-[10px] font-extrabold text-emerald-700 flex items-center gap-1">
+                                    <i data-lucide="trending-down" class="w-3 h-3"></i> Giảm dần
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-4 gap-1.5">
-                            <button onclick="applyWaterPreset(0.00, 0)" class="py-1.5 px-1 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[9.5px] font-extrabold text-[#1B4D3E] border border-[#1B4D3E]/20 leading-tight">
+                            <button onclick="applyActiveStationPreset(0.00, 0)" class="py-1.5 px-1 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[9.5px] font-extrabold text-[#1B4D3E] border border-[#1B4D3E]/20 leading-tight">
                                 Bình thường<br><span class="font-mono-num">0.00m</span>
                             </button>
-                            <button onclick="applyWaterPreset(1.80, 6)" class="py-1.5 px-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-[9.5px] font-extrabold text-amber-900 border border-amber-200 leading-tight">
+                            <button onclick="applyActiveStationPreset(1.80, 6)" class="py-1.5 px-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-[9.5px] font-extrabold text-amber-900 border border-amber-200 leading-tight">
                                 Tràn Đập Đá<br><span class="font-mono-num">1.80m</span>
                             </button>
-                            <button onclick="applyWaterPreset(3.50, 10)" class="py-1.5 px-1 rounded-xl bg-orange-50 hover:bg-orange-100 text-[9.5px] font-extrabold text-orange-800 border border-orange-200 leading-tight">
+                            <button onclick="applyActiveStationPreset(3.50, 10)" class="py-1.5 px-1 rounded-xl bg-orange-50 hover:bg-orange-100 text-[9.5px] font-extrabold text-orange-800 border border-orange-200 leading-tight">
                                 BĐ III Hương<br><span class="font-mono-num">3.50m</span>
                             </button>
-                            <button onclick="applyWaterPreset(4.34, 12)" class="py-1.5 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[9.5px] font-extrabold text-slate-800 border border-slate-300 leading-tight">
+                            <button onclick="applyActiveStationPreset(4.34, 12)" class="py-1.5 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[9.5px] font-extrabold text-slate-800 border border-slate-300 leading-tight">
                                 15/11/2023<br><span class="font-mono-num">4.34m</span>
                             </button>
                         </div>
 
                         <div class="grid grid-cols-3 gap-1.5">
-                            <button onclick="applyWaterPreset(5.05, 16)" class="py-1.5 px-1 rounded-xl bg-red-50 hover:bg-red-100 text-[9.5px] font-extrabold text-red-700 border border-red-200 leading-tight">
+                            <button onclick="applyActiveStationPreset(5.05, 16)" class="py-1.5 px-1 rounded-xl bg-red-50 hover:bg-red-100 text-[9.5px] font-extrabold text-red-700 border border-red-200 leading-tight">
                                 Lũ 27/10/2025<br><span class="font-mono-num">5.05m</span>
                             </button>
-                            <button onclick="applyWaterPreset(5.06, 16)" class="py-1.5 px-1 rounded-xl bg-red-50 hover:bg-red-100 text-[9.5px] font-extrabold text-red-800 border border-red-200 leading-tight">
+                            <button onclick="applyPhuOc2025Preset()" class="py-1.5 px-1 rounded-xl bg-red-50 hover:bg-red-100 text-[9.5px] font-extrabold text-red-800 border border-red-200 leading-tight">
                                 Phú Ốc 03/11/25<br><span class="font-mono-num">5.31m</span>
                             </button>
-                            <button onclick="applyWaterPreset(5.81, 18)" class="py-1.5 px-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-[9.5px] font-extrabold text-purple-900 border border-purple-200 leading-tight">
+                            <button onclick="applyActiveStationPreset(5.81, 18)" class="py-1.5 px-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-[9.5px] font-extrabold text-purple-900 border border-purple-200 leading-tight">
                                 Lũ lịch sử 1999<br><span class="font-mono-num">5.81m</span>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI ĐIỀU KHIỂN KỊCH BẢN 2: KẾT NỐI API HUE-S THỜI GIAN THỰC -->
+                    <div id="realtimeApiControlBox" class="hidden pt-2 space-y-2.5 border-t border-slate-100">
+                        <div class="p-3 rounded-2xl bg-[#EBF3F0]/80 border border-[#1B4D3E]/20 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10.5px] font-extrabold uppercase tracking-wider text-[#1B4D3E] flex items-center gap-1">
+                                    <span id="liveApiPulseDot" class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                                    Endpoint API Quan trắc Hue-S
+                                </span>
+                                <span id="liveApiHttpBadge" class="px-2 py-0.5 rounded-full bg-white text-[9.5px] font-extrabold text-[#1B4D3E] border border-[#1B4D3E]/20">
+                                    30 phút/lần
+                                </span>
+                            </div>
+
+                            <div class="flex gap-1.5">
+                                <input type="url" id="hueSApiUrlInput" placeholder="https://api.thuathienhue.gov.vn/..." class="flex-1 min-w-0 px-2.5 py-2 rounded-xl bg-white border border-slate-200 text-[11px] font-mono-num font-semibold text-slate-800">
+                                <button onclick="saveHueSApiUrl()" class="px-2.5 py-2 rounded-xl bg-white hover:bg-[#DCE7E2] border border-slate-200 text-[10.5px] font-extrabold text-[#1B4D3E] flex-shrink-0">
+                                    Lưu URL
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 pt-0.5">
+                                <div id="liveApiStatusText" class="text-[10.5px] text-slate-600 font-medium leading-snug">
+                                    Sẵn sàng đồng bộ số liệu độc lập 4 trạm từ cổng dữ liệu mở Hue-S.
+                                </div>
+                                <button onclick="fetchHueSRealtimeNow(true)" class="px-3 py-1.5 rounded-xl bg-[#1B4D3E] hover:bg-[#13382D] text-white text-[10.5px] font-extrabold flex items-center gap-1 flex-shrink-0 active:scale-95 transition">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                                    <span>Đồng bộ ngay</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1088,7 +1140,7 @@
                             <option value="kimlong">Trạm Kim Long (Sông Hương • BĐ III: 3.50m)</option>
                             <option value="phuoc">Trạm Phú Ốc (Sông Bồ • BĐ III: 4.50m)</option>
                             <option value="davien">Trạm Dã Viên (Sông Hương - Nội đô • BĐ III: 3.50m)</option>
-                            <option value="phongbinh">Trạm Phong Bình (Sông Ô Lâu / Hạ du Sông Bồ)</option>
+                            <option value="phongbinh">Trạm Phong Bình (Sông Ô Lâu - Phong Điền • BĐ III: 4.50m)</option>
                         </select>
                     </div>
 
@@ -1412,7 +1464,7 @@
         // =====================================================================
         // 1. STATE & CẤU HÌNH HỆ THỐNG (LOCALSTORAGE KEY)
         // =====================================================================
-        const STORAGE_KEY = 'hue_floodguard_v1_final';
+        const STORAGE_KEY = 'hue_floodguard_v1_fixed_basin';
         let map = null;
         let layers = { zones: null, stations: null, hazards: null, shelters: null, house: null, route: null };
         let isPinMode = false;           // ghim nhà (cũ)
@@ -1454,50 +1506,51 @@
             noido: {
                 label: 'Nội đô TP. Huế (Đập Đá • Bến Nghé)',
                 stationId: 'kimlong',
+            simStationId: 'kimlong',
                 roads: [
-                    { id: 'nd1', trigger: 1.80, title: 'Đập Đá tràn nước (Cấm qua lại)', detail: 'Cao trình +1.80m • Tránh hướng Vỹ Dạ – Lê Lợi.', lat: 16.4733, lng: 107.5982 },
-                    { id: 'nd2', trigger: 2.50, title: 'Đường trũng Kim Long, Vỹ Dạ, Phú Hậu', detail: 'Nước bắt đầu ngập sâu các tuyến ven sông.', lat: 16.4680, lng: 107.6020 },
-                    { id: 'nd3', trigger: 3.20, title: 'Ngã tư Nguyễn Công Trứ – Bến Nghé, Đống Đa', detail: 'Ngập sâu, xe máy dễ chết máy khi đi qua.', lat: 16.4694, lng: 107.5945 },
-                    { id: 'nd4', trigger: 3.50, title: 'Ngập diện rộng nội đô TP. Huế (BĐ III)', detail: 'Nhiều cung đường bị chia cắt hoàn toàn.', lat: 16.4650, lng: 107.5880 }
+                    { id: 'nd1', stationId: 'kimlong', trigger: 1.80, title: 'Đập Đá tràn nước (Cấm qua lại)', detail: 'Cao trình +1.80m Sông Hương • Tránh hướng Vỹ Dạ – Lê Lợi.', lat: 16.4733, lng: 107.5982 },
+                    { id: 'nd2', stationId: 'kimlong', trigger: 2.50, title: 'Đường trũng Kim Long, Vỹ Dạ, Phú Hậu', detail: 'Nước Sông Hương bắt đầu ngập sâu các tuyến ven sông.', lat: 16.4680, lng: 107.6020 },
+                    { id: 'nd3', stationId: 'kimlong', trigger: 3.20, title: 'Ngã tư Nguyễn Công Trứ – Bến Nghé, Đống Đa', detail: 'Ngập sâu, xe máy dễ chết máy khi đi qua.', lat: 16.4694, lng: 107.5945 },
+                    { id: 'nd4', stationId: 'kimlong', trigger: 3.50, title: 'Ngập diện rộng nội đô TP. Huế (BĐ III)', detail: 'Nhiều cung đường trung tâm bị chia cắt hoàn toàn.', lat: 16.4650, lng: 107.5880 }
                 ]
             },
             kimlong_huonglong: {
                 label: 'Phường Kim Long – Hương Long (Sông Hương)',
                 stationId: 'kimlong',
                 roads: [
-                    { id: 'kl1', trigger: 1.90, title: 'Đường ven sông Kim Long – Bến đò Thọ Lộc', detail: 'Nước tràn mặt đường ven bờ Bắc Sông Hương.', lat: 16.4585, lng: 107.5540 },
-                    { id: 'kl2', trigger: 2.40, title: 'Kiệt thấp Kim Long – Phạm Thị Liên', detail: 'Ngập cục bộ các kiệt trũng, khó đi xe máy.', lat: 16.4598, lng: 107.5585 },
-                    { id: 'kl3', trigger: 3.10, title: 'Ngã ba Lê Duẩn – Kim Long – Cầu Dã Viên', detail: 'Nước dâng cao chia cắt hướng về trung tâm.', lat: 16.4632, lng: 107.5675 },
-                    { id: 'kl4', trigger: 3.50, title: 'Ngập sâu toàn tuyến Kim Long (BĐ III)', detail: 'Cô lập đường bộ, chỉ di chuyển bằng ghe cứu hộ.', lat: 16.4590, lng: 107.5565 }
+                    { id: 'kl1', stationId: 'kimlong', trigger: 1.90, title: 'Đường ven sông Kim Long – Bến đò Thọ Lộc', detail: 'Nước tràn mặt đường ven bờ Bắc Sông Hương.', lat: 16.4585, lng: 107.5540 },
+                    { id: 'kl2', stationId: 'kimlong', trigger: 2.40, title: 'Kiệt thấp Kim Long – Phạm Thị Liên', detail: 'Ngập cục bộ các kiệt trũng, khó đi xe máy.', lat: 16.4598, lng: 107.5585 },
+                    { id: 'kl3', stationId: 'kimlong', trigger: 3.10, title: 'Ngã ba Lê Duẩn – Kim Long – Cầu Dã Viên', detail: 'Nước Sông Hương dâng cao chia cắt hướng về trung tâm.', lat: 16.4632, lng: 107.5675 },
+                    { id: 'kl4', stationId: 'kimlong', trigger: 3.50, title: 'Ngập sâu toàn tuyến Kim Long (BĐ III)', detail: 'Cô lập đường bộ, chỉ di chuyển bằng ghe cứu hộ.', lat: 16.4590, lng: 107.5565 }
                 ]
             },
             vyda_phuhau: {
                 label: 'Phường Vỹ Dạ – Phú Hậu – Cồn Hến',
                 stationId: 'kimlong',
                 roads: [
-                    { id: 'vd1', trigger: 1.80, title: 'Đập Đá & đường vào Cồn Hến (Ưng Bình)', detail: 'Cao trình +1.80m • Cô lập lối vào Cồn Hến.', lat: 16.4735, lng: 107.5985 },
-                    { id: 'vd2', trigger: 2.30, title: 'Đường Hàn Mặc Tử – Nguyễn Sinh Cung (Vỹ Dạ)', detail: 'Nước sông Hương & sông Như Ý tràn lên mặt đường.', lat: 16.4752, lng: 107.6048 },
-                    { id: 'vd3', trigger: 2.80, title: 'Đường Chi Lăng – Chợ Dinh (Phú Hậu)', detail: 'Ngập sâu, chia cắt hướng về Cầu Gia Hội.', lat: 16.4842, lng: 107.5960 },
-                    { id: 'vd4', trigger: 3.50, title: 'Ngập diện rộng Vỹ Dạ – Phú Hậu (BĐ III)', detail: 'Toàn bộ khu vực trũng bị chia cắt giao thông.', lat: 16.4780, lng: 107.6010 }
+                    { id: 'vd1', stationId: 'kimlong', trigger: 1.80, title: 'Đập Đá & đường vào Cồn Hến (Ưng Bình)', detail: 'Cao trình +1.80m Sông Hương • Cô lập lối vào Cồn Hến.', lat: 16.4735, lng: 107.5985 },
+                    { id: 'vd2', stationId: 'kimlong', trigger: 2.30, title: 'Đường Hàn Mặc Tử – Nguyễn Sinh Cung (Vỹ Dạ)', detail: 'Nước sông Hương & sông Như Ý tràn lên mặt đường.', lat: 16.4752, lng: 107.6048 },
+                    { id: 'vd3', stationId: 'kimlong', trigger: 2.80, title: 'Đường Chi Lăng – Chợ Dinh (Phú Hậu)', detail: 'Ngập sâu, chia cắt hướng về Cầu Gia Hội.', lat: 16.4842, lng: 107.5960 },
+                    { id: 'vd4', stationId: 'kimlong', trigger: 3.50, title: 'Ngập diện rộng Vỹ Dạ – Phú Hậu (BĐ III)', detail: 'Toàn bộ khu vực trũng bị chia cắt giao thông.', lat: 16.4780, lng: 107.6010 }
                 ]
             },
             songbo: {
                 label: 'Hạ du Sông Bồ (Trạm Phú Ốc • Quảng Điền)',
                 stationId: 'phuoc',
                 roads: [
-                    { id: 'sb1', trigger: 2.20, title: 'Tỉnh lộ 4 & đường ven sông Bồ (Thị trấn Sịa)', detail: 'Nước tràn qua các đoạn trũng thấp ven đê.', lat: 16.5785, lng: 107.5150 },
-                    { id: 'sb2', trigger: 3.00, title: 'Đập tràn Thủ Lễ – Quảng Phước', detail: 'BĐ II Sông Bồ • Nước chảy xiết, cấm qua lại.', lat: 16.5650, lng: 107.5260 },
-                    { id: 'sb3', trigger: 3.80, title: 'Tuyến QL49B qua Quảng Thọ – Quảng An', detail: 'Ngập sâu nhiều đoạn, chia cắt giao thông liên xã.', lat: 16.5520, lng: 107.5420 },
-                    { id: 'sb4', trigger: 4.50, title: 'Ngập diện rộng hạ du Sông Bồ (BĐ III)', detail: 'Cô lập nhiều khu dân cư thấp trũng ven sông.', lat: 16.5350, lng: 107.5380 }
+                    { id: 'sb1', stationId: 'phuoc', trigger: 2.20, title: 'Tỉnh lộ 4 & đường ven sông Bồ (Thị trấn Sịa)', detail: 'Nước Sông Bồ tràn qua các đoạn trũng thấp ven đê.', lat: 16.5785, lng: 107.5150 },
+                    { id: 'sb2', stationId: 'phuoc', trigger: 3.00, title: 'Đập tràn Thủ Lễ – Quảng Phước', detail: 'BĐ II Sông Bồ • Nước chảy xiết, cấm qua lại.', lat: 16.5650, lng: 107.5260 },
+                    { id: 'sb3', stationId: 'phuoc', trigger: 3.80, title: 'Tuyến QL49B qua Quảng Thọ – Quảng An', detail: 'Ngập sâu nhiều đoạn, chia cắt giao thông liên xã.', lat: 16.5520, lng: 107.5420 },
+                    { id: 'sb4', stationId: 'phuoc', trigger: 4.50, title: 'Ngập diện rộng hạ du Sông Bồ (BĐ III)', detail: 'Cô lập nhiều khu dân cư thấp trũng ven sông.', lat: 16.5350, lng: 107.5380 }
                 ]
             },
             songolau: {
                 label: 'Lưu vực Sông Ô Lâu (Trạm Phong Bình)',
                 stationId: 'phongbinh',
                 roads: [
-                    { id: 'ol1', trigger: 1.80, title: 'Đường liên xã Phong Bình – Phong Hòa', detail: 'Nước bắt đầu tràn qua các ngầm tràn thấp.', lat: 16.6320, lng: 107.4280 },
-                    { id: 'ol2', trigger: 2.50, title: 'Tỉnh lộ 6 & khu vực chợ Phong Bình', detail: 'Ngập cục bộ, hạn chế di chuyển xe máy ban đêm.', lat: 16.6280, lng: 107.4350 },
-                    { id: 'ol3', trigger: 4.50, title: 'Ngập sâu vùng trũng Ô Lâu (BĐ III)', detail: 'Chia cắt đường bộ, di chuyển bằng ghe/xuồng cứu hộ.', lat: 16.6200, lng: 107.4400 }
+                    { id: 'ol1', stationId: 'phongbinh', trigger: 1.80, title: 'Đường liên xã Phong Bình – Phong Hòa', detail: 'Nước Sông Ô Lâu bắt đầu tràn qua các ngầm tràn thấp.', lat: 16.6320, lng: 107.4280 },
+                    { id: 'ol2', stationId: 'phongbinh', trigger: 2.50, title: 'Tỉnh lộ 6 & khu vực chợ Phong Bình', detail: 'Ngập cục bộ, hạn chế di chuyển xe máy ban đêm.', lat: 16.6280, lng: 107.4350 },
+                    { id: 'ol3', stationId: 'phongbinh', trigger: 4.50, title: 'Ngập sâu vùng trũng Ô Lâu (BĐ III)', detail: 'Chia cắt đường bộ, di chuyển bằng ghe/xuồng cứu hộ.', lat: 16.6200, lng: 107.4400 }
                 ]
             }
         };
@@ -1522,54 +1575,41 @@
             { short: 'Khu vực An Cựu cao', name: 'Khu vực cao An Cựu - Hùng Vương', lat: 16.4550, lng: 107.5955 }
         ];
 
-        // Các nút giao thông chính / cầu / điểm cao dùng cho thuật toán tìm đường tránh ngập (Dijkstra)
-        // Các điểm này đóng vai trò "nút" trong đồ thị đường đi an toàn
-        const KEY_WAYPOINTS = [
-            { id: 'tt', name: 'Cầu Trường Tiền', lat: 16.4689, lng: 107.5887 },
-            { id: 'px', name: 'Cầu Phú Xuân', lat: 16.4658, lng: 107.5848 },
-            { id: 'dv', name: 'Cầu Dã Viên', lat: 16.4632, lng: 107.5675 },
-            { id: 'bh', name: 'Cầu Bạch Hổ', lat: 16.4545, lng: 107.5805 },
-            { id: 'nguyen_hue', name: 'Ngã tư Nguyễn Huệ - Đống Đa', lat: 16.4612, lng: 107.5895 },
-            { id: 'le_loi', name: 'Lê Lợi - gần BV TW', lat: 16.4635, lng: 107.5870 },
-            { id: 'kim_long_center', name: 'Kim Long trung tâm', lat: 16.4595, lng: 107.5565 },
-            { id: 'vy_da', name: 'Vỹ Dạ - Phạm Văn Đồng', lat: 16.4752, lng: 107.6048 },
-            { id: 'phu_hau', name: 'Phú Hậu - Chi Lăng', lat: 16.4842, lng: 107.5960 },
-            { id: 'dap_da', name: 'Khu vực gần Đập Đá (tránh khi ngập)', lat: 16.4720, lng: 107.5965 },
-            { id: 'nam_giao', name: 'Đàn Nam Giao', lat: 16.4455, lng: 107.5750 },
-            { id: 'su_pham', name: 'ĐH Sư phạm Huế', lat: 16.4675, lng: 107.5882 },
-            { id: 'bv_tw', name: 'BV Trung ương Huế', lat: 16.4622, lng: 107.5865 },
-            { id: 'an_cuu', name: 'An Cựu cao', lat: 16.4550, lng: 107.5955 },
-            { id: 'huong_so', name: 'Hương Sơ - hướng Tây', lat: 16.4700, lng: 107.5600 },
-            { id: 'thuan_an_road', name: 'Hướng đường cao ráo phía Đông', lat: 16.4705, lng: 107.6100 }
-        ];
-
-        const DEFAULT_SUPPLIES = [
-            { id: 'water', name: 'Nước uống & sinh hoạt', unit: 'lít', current: 28, step: 5, dailyAdult: 3.0, dailyChild: 2.0, dailyElderly: 2.5, perHouseholdDaily: 0, custom: false },
-            { id: 'rice', name: 'Gạo dự trữ', unit: 'kg', current: 8, step: 1, dailyAdult: 0.4, dailyChild: 0.25, dailyElderly: 0.3, perHouseholdDaily: 0, custom: false },
-            { id: 'dryfood', name: 'Thức ăn khô / Mì gói', unit: 'gói', current: 25, step: 5, dailyAdult: 2.0, dailyChild: 1.5, dailyElderly: 1.5, perHouseholdDaily: 0, custom: false },
-            { id: 'battery', name: 'Pin dự phòng & Đèn sạc', unit: 'cục', current: 3, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 0.5, custom: false },
-            { id: 'gas', name: 'Bình gas mini / Cồn khô', unit: 'bình', current: 4, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 0.6, custom: false },
-            { id: 'medicine', name: 'Thuốc men & Y tế cơ bản', unit: 'ngày', current: 5, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 1.0, custom: false }
-        ];
+        // =====================================================================
+        // KHỞI TẠO TRẠNG THÁI MẶC ĐỊNH & LƯU TRỮ LOCALSTORAGE (4 TRẠM ĐỘC LẬP)
+        // =====================================================================
+        const DEFAULT_HUES_API_URL = 'https://dichvucong.hue.gov.vn/api/quantrac/mucnuoc';
 
         const DEFAULT_STATE = {
+            houseType: '2floor', // '1floor' | '2floor'
             ownerName: 'Nguyễn Văn Minh',
-            ownerPhone: '0905-123-456',
+            ownerPhone: '0914-123-456',
             familyPhone: '0914-678-910',
             address: 'Đường Nguyễn Huệ - Đống Đa, TP. Huế',
             lat: 16.4612,
             lng: 107.5895,
             stationId: 'kimlong',
-            houseType: '2floor', // '1floor' | '2floor'
+            dataSourceMode: 'simulation', // 'simulation' | 'realtime'
+            hueSApiUrl: DEFAULT_HUES_API_URL,
+            stationLevels: {
+                kimlong: 0.00,
+                phuoc: 0.00,
+                davien: 0.00,
+                phongbinh: 0.00
+            },
+            stationSpeeds: {
+                kimlong: 0,
+                phuoc: 0,
+                davien: 0,
+                phongbinh: 0
+            },
             floorLevel: 4.34,
             yardLevel: 3.50,
             autoAlert: true,
-            kimLongLevel: 0.00,
-            risingSpeedCmHr: 0,
-            reserveDays: 7,
             showFloodZones: true,
+            roadAreaKey: 'noido',
+            roadCutoffs: JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads)),
             selectedShelterIdx: 0,
-            // Routing: origin & destination selection
             useCustomOrigin: false,
             customOriginLat: null,
             customOriginLng: null,
@@ -1577,58 +1617,49 @@
             customDestLat: null,
             customDestLng: null,
             customDestName: '',
-            roadAreaKey: 'noido',
-            roadCutoffs: JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads)),
             completedTasks: {},
+            reserveDays: 7,
             members: [
-                { id: 'm1', name: 'Bố', role: 'Người lớn' },
-                { id: 'm2', name: 'Mẹ', role: 'Người lớn' },
-                { id: 'm3', name: 'Minh', role: 'Trẻ em' },
-                { id: 'm4', name: 'Bà', role: 'Người cao tuổi • Thuốc' }
+                { id: 'm1', name: 'Anh Minh (Chủ hộ)', role: 'Người lớn' },
+                { id: 'm2', name: 'Chị Lan', role: 'Người lớn' },
+                { id: 'm3', name: 'Bà nội', role: 'Người cao tuổi • Thuốc' },
+                { id: 'm4', name: 'Bé Bảo', role: 'Trẻ em' }
             ],
-            supplies: JSON.parse(JSON.stringify(DEFAULT_SUPPLIES)),
+            supplies: [
+                { id: 's1', name: 'Nước uống & sinh hoạt', unit: 'lít', current: 30, step: 5, dailyAdult: 3.0, dailyChild: 2.0, dailyElderly: 2.5, perHouseholdDaily: 0 },
+                { id: 's2', name: 'Gạo & thực phẩm nấu', unit: 'kg', current: 8, step: 1, dailyAdult: 0.4, dailyChild: 0.25, dailyElderly: 0.3, perHouseholdDaily: 0 },
+                { id: 's3', name: 'Mì gói / Lương khô', unit: 'gói', current: 24, step: 4, dailyAdult: 2.0, dailyChild: 1.5, dailyElderly: 1.5, perHouseholdDaily: 0 },
+                { id: 's4', name: 'Pin dự phòng / Đèn sạc', unit: 'viên', current: 3, step: 1, dailyAdult: 0, dailyChild: 0, dailyElderly: 0, perHouseholdDaily: 0.5 }
+            ],
             kitItems: [
-                { id: 'k1', name: 'Nước uống đóng chai (tối thiểu 3L/người/ngày)', checked: false },
-                { id: 'k2', name: 'Thực phẩm ăn liền (mì gói, lương khô, sữa)', checked: false },
-                { id: 'k3', name: 'Pin dự phòng & đèn pin chống nước', checked: true },
-                { id: 'k4', name: 'Thuốc thiết yếu & bộ sơ cứu y tế', checked: true },
-                { id: 'k5', name: 'Bản sao giấy tờ tùy thân bọc túi chống nước', checked: true },
-                { id: 'k6', name: 'Tiền mặt mệnh giá nhỏ', checked: false },
-                { id: 'k7', name: 'Áo phao & còi báo hiệu cứu hộ', checked: false },
-                { id: 'k8', name: 'Bồn cầu di động / túi vệ sinh khẩn cấp', checked: false }
+                { id: 'k1', name: 'Giấy tờ tùy thân, sổ đỏ bọc túi nilon kín nước', checked: true },
+                { id: 'k2', name: 'Thuốc thiết yếu gia đình (huyết áp, cảm sốt, băng gạc)', checked: true },
+                { id: 'k3', name: 'Đèn pin chống nước & sạc dự phòng đầy 100%', checked: true },
+                { id: 'k4', name: 'Áo phao / can nhựa rỗng làm phao nổi cho trẻ em', checked: false },
+                { id: 'k5', name: 'Nước đóng chai & lương khô ăn liền (tối thiểu 3 ngày)', checked: false },
+                { id: 'k6', name: 'Còi cứu hộ, bật lửa & dây thừng nhỏ', checked: false },
+                { id: 'k7', name: 'Tiền mặt mệnh giá nhỏ bọc chống ẩm', checked: false },
+                { id: 'k8', name: 'Quần áo ấm & áo mưa bộ gọn nhẹ', checked: false }
             ]
         };
-
-        let state = loadState();
-
-        function safeLucide() {
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                window.lucide.createIcons();
-            }
-        }
 
         function loadState() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    return {
-                        ...DEFAULT_STATE,
-                        ...parsed,
-                        houseType: parsed.houseType === '1floor' ? '1floor' : '2floor',
-                        roadAreaKey: parsed.roadAreaKey || 'noido',
-                        roadCutoffs: Array.isArray(parsed.roadCutoffs)
-                            ? parsed.roadCutoffs
-                            : JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads)),
-                        completedTasks: parsed.completedTasks && typeof parsed.completedTasks === 'object' ? parsed.completedTasks : {},
-                        supplies: Array.isArray(parsed.supplies) && parsed.supplies.length > 0
-                            ? parsed.supplies
-                            : JSON.parse(JSON.stringify(DEFAULT_SUPPLIES))
-                    };
-                }
-            } catch (e) {}
-            return JSON.parse(JSON.stringify(DEFAULT_STATE));
+                if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+                const parsed = JSON.parse(raw);
+                const merged = Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+                merged.stationLevels = Object.assign({}, DEFAULT_STATE.stationLevels, parsed.stationLevels || {});
+                merged.stationSpeeds = Object.assign({}, DEFAULT_STATE.stationSpeeds, parsed.stationSpeeds || {});
+                return merged;
+            } catch (e) {
+                return JSON.parse(JSON.stringify(DEFAULT_STATE));
+            }
         }
+
+        let state = loadState();
+        let simTrendMode = null; // null | 'rise' | 'fall'
+        let realtimePollTimer = null;
 
         function persistState() {
             try {
@@ -1636,183 +1667,181 @@
             } catch (e) {}
         }
 
+        function safeLucide() {
+            try {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            } catch (e) {}
+        }
+
+        // =====================================================================
+        // TÍNH TOÁN THỦY VĂN ĐỘC LẬP 4 TRẠM & ĐÁNH GIÁ NGẬP HỘ GIA ĐÌNH
+        // =====================================================================
         function getActiveStation() {
             return HYDRO_STATIONS.find(s => s.id === state.stationId) || HYDRO_STATIONS[0];
         }
 
+        function getSimStation() {
+            const id = state.simStationId || state.stationId || 'kimlong';
+            return HYDRO_STATIONS.find(s => s.id === id) || HYDRO_STATIONS[0];
+        }
+
         function getStationLevel(station) {
-            return +(state.kimLongLevel * station.ratio).toFixed(2);
+            const id = typeof station === 'string' ? station : (station && station.id ? station.id : state.stationId);
+            const val = state.stationLevels && typeof state.stationLevels[id] === 'number' ? state.stationLevels[id] : 0;
+            return +Math.max(0, val).toFixed(2);
+        }
+
+        function getStationSpeed(station) {
+            const id = typeof station === 'string' ? station : (station && station.id ? station.id : state.stationId);
+            return (state.stationSpeeds && typeof state.stationSpeeds[id] === 'number') ? state.stationSpeeds[id] : 0;
+        }
+
+        function getHouseholdEffectiveHydro() {
+            const st = getActiveStation();
+            const isHuongRiver = (st.id === 'kimlong' || st.id === 'davien');
+            if (isHuongRiver) {
+                const klLvl = getStationLevel('kimlong');
+                const dvLvl = getStationLevel('davien');
+                if (dvLvl > klLvl) {
+                    return { station: st, level: dvLvl, speed: getStationSpeed('davien'), effectiveStationName: 'Sông Hương (Kim Long/Dã Viên)' };
+                }
+                return { station: st, level: klLvl, speed: getStationSpeed('kimlong'), effectiveStationName: st.name };
+            }
+            return { station: st, level: getStationLevel(st), speed: getStationSpeed(st), effectiveStationName: st.name };
+        }
+
+        function getRoadReferenceStation(road) {
+            const fallbackStId = (AREA_ROAD_PRESETS[state.roadAreaKey] && AREA_ROAD_PRESETS[state.roadAreaKey].stationId) || state.stationId;
+            const rStId = (road && road.stationId) ? road.stationId : fallbackStId;
+            return HYDRO_STATIONS.find(s => s.id === rStId) || getActiveStation();
+        }
+
+        function getRoadEffectiveLevel(road) {
+            const st = getRoadReferenceStation(road);
+            if (st.id === 'kimlong' || st.id === 'davien') {
+                return Math.max(getStationLevel('kimlong'), getStationLevel('davien'));
+            }
+            return getStationLevel(st);
+        }
+
+        function getOfficialAlertTier(station, lvl) {
+            if (lvl >= station.bd3) return { code: 'BĐ III', label: `Trên Báo động III (${station.bd3.toFixed(2)}m)`, color: '#DC2626' };
+            if (lvl >= station.bd2) return { code: 'BĐ II', label: `Báo động II (${station.bd2.toFixed(2)}m)`, color: '#EA580C' };
+            if (lvl >= station.bd1) return { code: 'BĐ I', label: `Báo động I (${station.bd1.toFixed(2)}m)`, color: '#EAB308' };
+            return { code: 'Dưới BĐ I', label: 'Dưới Báo động I', color: '#16A34A' };
         }
 
         function getMinRoadCutoff() {
-            if (!Array.isArray(state.roadCutoffs) || state.roadCutoffs.length === 0) {
-                return { trigger: 1.80, title: 'Đập Đá tràn nước', detail: 'Cao trình +1.80m' };
-            }
-            return state.roadCutoffs.reduce((minObj, cur) => (cur.trigger < minObj.trigger ? cur : minObj), state.roadCutoffs[0]);
-        }
-
-        // =====================================================================
-        // 2. LOGIC PHÂN TÍCH NGẬP & KẾ HOẠCH DI CHUYỂN THEO LOẠI NHÀ & KHU VỰC
-        // =====================================================================
-        function getOfficialAlertTier(station, level) {
-            if (level > station.bd3) {
-                return { code: 'TRÊN BĐ III', label: 'Khẩn cấp (> BĐ III)', color: '#6B21A8' };
-            } else if (level >= station.bd3) {
-                return { code: 'BĐ III', label: 'Báo động III', color: '#DC2626' };
-            } else if (level >= station.bd2) {
-                return { code: 'BĐ II', label: 'Báo động II', color: '#EA580C' };
-            } else if (level >= station.bd1) {
-                return { code: 'BĐ I', label: 'Báo động I', color: '#EAB308' };
-            }
-            return { code: 'Dưới BĐ I', label: 'Dưới BĐ I', color: '#16A34A' };
+            const roads = Array.isArray(state.roadCutoffs) && state.roadCutoffs.length > 0
+                ? state.roadCutoffs
+                : AREA_ROAD_PRESETS.noido.roads;
+            return roads.reduce((min, r) => (r.trigger < min.trigger ? r : min), roads[0]);
         }
 
         function evaluateHouseholdFlood() {
-            const st = getActiveStation();
-            const currentLvl = getStationLevel(st);
-            const officialTier = getOfficialAlertTier(st, currentLvl);
-            const doorstepLvl = +(state.floorLevel - 0.20).toFixed(2);
+            const hydro = getHouseholdEffectiveHydro();
+            const st = hydro.station;
+            const lvl = hydro.level;
+            const speedCmHr = hydro.speed;
+            const officialTier = getOfficialAlertTier(st, lvl);
             const is1Floor = state.houseType === '1floor';
-
             const firstRoad = getMinRoadCutoff();
-            const diffFloorCm = Math.round((state.floorLevel - currentLvl) * 100);
-            const diffYardCm = Math.round((state.yardLevel - currentLvl) * 100);
-            const needEarly1FloorEvac = is1Floor && (currentLvl >= firstRoad.trigger || currentLvl >= st.bd2 || diffYardCm <= 40);
+            const firstRoadLvl = getRoadEffectiveLevel(firstRoad);
 
-            let etaText = `${officialTier.label} • Chưa ngập`;
-            if (diffFloorCm <= 0) {
-                etaText = `Tràn nền +${Math.abs(diffFloorCm)}cm`;
-            } else if (state.risingSpeedCmHr > 0 && currentLvl >= st.bd1) {
-                const totalMins = Math.round((diffFloorCm / state.risingSpeedCmHr) * 60);
-                const hrs = Math.floor(totalMins / 60);
-                const mins = totalMins % 60;
-                etaText = hrs > 0 ? `~${hrs}g ${mins}p nữa chạm nền` : `~${Math.max(5, mins)}p nữa chạm nền`;
+            const diffYardCm = Math.round((lvl - state.yardLevel) * 100);
+            const diffFloorCm = Math.round((lvl - state.floorLevel) * 100);
+
+            const yardLabel = diffYardCm >= 0 ? `Ngập sân +${diffYardCm}cm` : `Cách sân +${Math.abs(diffYardCm)}cm`;
+            const floorLabel = diffFloorCm >= 0 ? `Ngập nền +${diffFloorCm}cm` : `Cách nền +${Math.abs(diffFloorCm)}cm`;
+
+            let etaText = `${officialTier.code} • Chưa tràn nền`;
+            if (diffFloorCm < 0 && speedCmHr > 0) {
+                const hrs = Math.abs(diffFloorCm) / speedCmHr;
+                etaText = hrs < 1 ? `Tràn nền sau ~${Math.max(5, Math.round(hrs * 60))} phút` : `Tràn nền sau ~${hrs.toFixed(1)} giờ`;
+            } else if (diffFloorCm >= 0) {
+                etaText = `Đã tràn nền nhà +${diffFloorCm}cm`;
             }
 
-            if (diffFloorCm <= 0) {
+            const roadCloseToCut = firstRoadLvl >= (firstRoad.trigger - 0.10);
+            const houseCloseToYard = lvl >= (state.yardLevel - 0.30);
+            const needEarly1FloorEvac = is1Floor && (houseCloseToYard || roadCloseToCut);
+
+            if (lvl >= state.floorLevel) {
                 return {
                     key: 'flooded',
-                    officialTier,
-                    needEarly1FloorEvac,
-                    heroBadge: is1Floor ? 'NGUY HIỂM: NGẬP NHÀ 1 TẦNG' : 'NGUY HIỂM: NƯỚC TRÀN TẦNG 1',
-                    shortBadge: `Tràn nền +${Math.abs(diffFloorCm)}cm`,
-                    plainAdvice: is1Floor
-                        ? `Nước ngập nền nhà 1 tầng +${Math.abs(diffFloorCm)} cm! Không có tầng trên — Gọi 112/115 ngay nếu chưa kịp sơ tán.`
-                        : `Nước tràn nền tầng 1 +${Math.abs(diffFloorCm)} cm! Ngắt aptomat tầng trệt và rút lên tầng 2 trú ẩn an toàn.`,
+                    heroBadge: 'NGẬP TRÀN NỀN NHÀ',
+                    color: '#6B21A8',
+                    boxClass: 'bg-purple-50/95 border-purple-300',
+                    plainAdvice: `Nước đã tràn vào nền nhà +${diffFloorCm}cm • Ngắt cầu dao điện ngay!`,
                     subAction: is1Floor
-                        ? 'Cúp cầu dao tổng, mặc áo phao/vật nổi, không tự lội dòng nước xiết và gọi ngay lực lượng cứu hộ 112/115.'
-                        : 'Đường ngoài đã bị chia cắt sâu; không mạo hiểm ra ngoài, giữ lương thực/nước sạch và ở yên trên tầng 2.',
-                    floorLabel: `Tràn nền +${Math.abs(diffFloorCm)}cm`,
-                    yardLabel: `Ngập sân ${Math.abs(diffYardCm)}cm`,
-                    color: currentLvl > st.bd3 + 0.8 ? '#6B21A8' : '#DC2626',
-                    boxClass: 'bg-red-50 border-red-300',
-                    etaText
-                };
-            } else if (currentLvl >= doorstepLvl || currentLvl >= st.bd3) {
-                return {
-                    key: 'doorstep',
-                    officialTier,
-                    needEarly1FloorEvac,
-                    heroBadge: is1Floor ? 'KHẨN CẤP: SƠ TÁN NGAY' : 'KHẨN CẤP: SÁT BẬC CỬA',
-                    shortBadge: `Cách nền +${diffFloorCm}cm`,
-                    plainAdvice: is1Floor
-                        ? `Còn cách nền +${diffFloorCm} cm • Nhà 1 tầng không có gác: Rời nhà đi tránh trú NGAY trước khi mất lối thoát!`
-                        : `Còn cách nền +${diffFloorCm} cm • Kê cao tủ lạnh/máy giặt, ngắt điện tầng 1 và rút lên tầng 2!`,
-                    subAction: is1Floor
-                        ? 'Khóa cửa, ngắt cầu dao tổng, mang túi thoát hiểm di chuyển ngay tới điểm tránh trú cao ráo.'
-                        : 'Nhiều cung đường ngoài đã bị chia cắt (≥ BĐ III). Ưu tiên cố thủ an toàn trên tầng 2 thay vì lội nước.',
-                    floorLabel: `Cách nền +${diffFloorCm}cm`,
-                    yardLabel: diffYardCm <= 0 ? `Ngập sân ${Math.abs(diffYardCm)}cm` : `Cách sân +${diffYardCm}cm`,
-                    color: '#DC2626',
-                    boxClass: 'bg-red-50/90 border-red-200',
-                    etaText
-                };
-            } else if (diffYardCm <= 0 || currentLvl >= st.bd2 || (is1Floor && currentLvl >= firstRoad.trigger)) {
-                return {
-                    key: 'yard',
-                    officialTier,
-                    needEarly1FloorEvac,
-                    heroBadge: is1Floor ? 'CẢNH BÁO SỚM: SƠ TÁN NHÀ 1 TẦNG' : 'CHÚ Ý: NƯỚC VÀO SÂN',
-                    shortBadge: `Cách nền +${diffFloorCm}cm`,
-                    plainAdvice: is1Floor
-                        ? `Còn cách nền +${diffFloorCm} cm • Tuyến ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) bắt đầu ngập: Nhà 1 tầng cần SƠ TÁN SỚM ngay!`
-                        : (diffYardCm <= 0
-                            ? `Nước đã vào sân ${Math.abs(diffYardCm)} cm (cách nền +${diffFloorCm} cm). Dời xe & kê cao đồ đạc.`
-                            : `Nước sắp tràn vào sân (cách sân +${diffYardCm} cm). Dời xe lên vùng cao trước khi ngập đường.`),
-                    subAction: is1Floor
-                        ? 'Không chờ nước vào sân mới đi! Đưa người già, trẻ nhỏ và xe máy tới nơi cao ráo ngay khi đường còn thông.'
-                        : 'Dời xe máy/ô tô lên chỗ cao, chuẩn bị kê cao tủ lạnh/máy giặt và mang đồ thiết yếu lên tầng 2.',
-                    floorLabel: `Cách nền +${diffFloorCm}cm`,
-                    yardLabel: diffYardCm <= 0 ? `Ngập sân ${Math.abs(diffYardCm)}cm` : `Cách sân +${diffYardCm}cm`,
-                    color: is1Floor ? '#DC2626' : '#EA580C',
-                    boxClass: is1Floor ? 'bg-red-50/90 border-red-200' : 'bg-orange-50/90 border-orange-200',
-                    etaText
-                };
-            } else if (currentLvl >= st.bd1) {
-                return {
-                    key: 'watch',
-                    officialTier,
-                    needEarly1FloorEvac,
-                    heroBadge: 'THEO DÕI: BÁO ĐỘNG I',
-                    shortBadge: `BĐ I (+${diffFloorCm}cm)`,
-                    plainAdvice: is1Floor
-                        ? `Còn cách nền +${diffFloorCm} cm • Nhà 1 tầng sẵn sàng phương án sơ tán sớm trước mốc tràn đường ${firstRoad.trigger.toFixed(2)}m.`
-                        : `Còn cách nền +${diffFloorCm} cm • Nước bắt đầu dâng vùng trũng ven sông.`,
-                    subAction: is1Floor
-                        ? 'Chuẩn bị túi thoát hiểm, xác định trước tuyến đường cao ráo về điểm sơ tán (ĐH Sư phạm Huế).'
-                        : 'Khơi thông miệng cống, sạc đầy pin dự phòng và dọn gọn tầng 2 để sẵn sàng kê đồ.',
-                    floorLabel: `Cách nền +${diffFloorCm}cm`,
-                    yardLabel: `Cách sân +${diffYardCm}cm`,
-                    color: '#EAB308',
-                    boxClass: 'bg-amber-50/90 border-amber-200',
-                    etaText
-                };
-            } else {
-                return {
-                    key: 'safe',
-                    officialTier,
-                    needEarly1FloorEvac: false,
-                    heroBadge: 'AN TOÀN',
-                    shortBadge: `An toàn (+${diffFloorCm}cm)`,
-                    plainAdvice: `Còn cách nền nhà +${diffFloorCm} cm • Sân và nền nhà khô ráo hoàn toàn.`,
-                    subAction: is1Floor
-                        ? 'Nhà 1 tầng (Tầng trệt) đang an toàn. Kiểm tra sẵn túi thoát hiểm và lộ trình sơ tán gần nhất.'
-                        : 'Nhà 2 tầng đang an toàn. Theo dõi bản tin mưa lũ Hue-S cập nhật 30 phút/lần.',
-                    floorLabel: `Cách nền +${diffFloorCm}cm`,
-                    yardLabel: `Cách sân +${diffYardCm}cm`,
-                    color: '#16A34A',
-                    boxClass: 'bg-emerald-50/90 border-emerald-200',
-                    etaText
+                        ? 'Nhà 1 tầng: Giữ vị trí cao nhất, mặc áo phao và gọi ngay 112 / 115 nếu nước tiếp tục lên.'
+                        : 'Nhà 2 tầng: Rút toàn bộ gia đình lên tầng 2 an toàn, tuyệt đối không lội ra ngoài.',
+                    officialTier, yardLabel, floorLabel, etaText, needEarly1FloorEvac, effectiveLvl: lvl, effectiveSpeed: speedCmHr
                 };
             }
+            if (lvl >= state.floorLevel - 0.25) {
+                return {
+                    key: 'doorstep',
+                    heroBadge: 'NGUY HIỂM • SÁT BẬC CỬA',
+                    color: '#DC2626',
+                    boxClass: 'bg-red-50/95 border-red-300',
+                    plainAdvice: `Nước chỉ còn cách nền nhà ${Math.abs(diffFloorCm)} cm!`,
+                    subAction: is1Floor
+                        ? 'KHẨN CẤP RỜI NHÀ 1 TẦNG: Di chuyển ngay tới điểm tránh trú cao tầng trước khi ngập sâu.'
+                        : 'Ngắt điện tầng 1, khóa van gas và chuyển toàn bộ người thân lên tầng 2 ngay.',
+                    officialTier, yardLabel, floorLabel, etaText, needEarly1FloorEvac, effectiveLvl: lvl, effectiveSpeed: speedCmHr
+                };
+            }
+            if (lvl >= state.yardLevel) {
+                return {
+                    key: 'yard',
+                    heroBadge: 'NƯỚC ĐÃ VÀO SÂN',
+                    color: '#EA580C',
+                    boxClass: 'bg-orange-50/95 border-orange-300',
+                    plainAdvice: `Sân ngập +${diffYardCm}cm • Còn cách nền nhà ${Math.abs(diffFloorCm)} cm.`,
+                    subAction: is1Floor
+                        ? `Nhà 1 tầng: Sơ tán người già, trẻ nhỏ & xe máy NGAY trước khi ${firstRoad.title} chia cắt.`
+                        : 'Dời xe lên vùng cao, kê đồ điện tử tầng trệt và chuẩn bị rút lên tầng 2.',
+                    officialTier, yardLabel, floorLabel, etaText, needEarly1FloorEvac, effectiveLvl: lvl, effectiveSpeed: speedCmHr
+                };
+            }
+            if (lvl >= st.bd1 || needEarly1FloorEvac) {
+                return {
+                    key: 'watch',
+                    heroBadge: needEarly1FloorEvac ? 'CẢNH BÁO SƠ TÁN SỚM' : 'THEO DÕI • TRÊN BĐ I',
+                    color: '#EAB308',
+                    boxClass: 'bg-amber-50/95 border-amber-300',
+                    plainAdvice: `Cách mặt sân +${Math.abs(diffYardCm)} cm • Cách nền nhà +${Math.abs(diffFloorCm)} cm.`,
+                    subAction: is1Floor
+                        ? `Nhà 1 tầng: Sẵn sàng sơ tán trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) ngập tràn.`
+                        : 'Khơi thông cống rãnh, sạc đầy pin dự phòng và dọn gọn tầng 2.',
+                    officialTier, yardLabel, floorLabel, etaText, needEarly1FloorEvac, effectiveLvl: lvl, effectiveSpeed: speedCmHr
+                };
+            }
+            return {
+                key: 'safe',
+                heroBadge: 'AN TOÀN',
+                color: '#16A34A',
+                boxClass: 'bg-emerald-50/90 border-emerald-200',
+                plainAdvice: `Còn cách nền nhà +${Math.abs(diffFloorCm)} cm • Sân và nền nhà khô ráo hoàn toàn.`,
+                subAction: 'Theo dõi bản tin mưa lũ Hue-S; kiểm tra sẵn sàng túi thoát hiểm gia đình.',
+                officialTier, yardLabel, floorLabel, etaText, needEarly1FloorEvac: false, effectiveLvl: lvl, effectiveSpeed: speedCmHr
+            };
         }
 
         // =====================================================================
-        // 3. BẢN ĐỒ GIS HUẾ (LEAFLET 1.9.4 + OSM/ESRI + RESIZE OBSERVER)
+        // KHỞI TẠO BẢN ĐỒ GIS LEAFLET & TƯƠNG TÁC GHIM / ĐIỂM ĐI - ĐIỂM ĐẾN
         // =====================================================================
         function initHueMap() {
-            map = L.map('hueGisMap', {
-                zoomControl: false,
-                attributionControl: true
-            }).setView([state.lat, state.lng], 14);
+            if (map || !document.getElementById('hueGisMap')) return;
+            map = L.map('hueGisMap', { zoomControl: false }).setView([state.lat, state.lng], 14);
 
-            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            });
-
-            const esriLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 19,
-                attribution: 'Esri & OpenStreetMap'
-            });
-
-            osmLayer.on('tileerror', () => {
-                if (!map.hasLayer(esriLayer)) {
-                    esriLayer.addTo(map);
-                }
-            });
-
-            osmLayer.addTo(map);
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
 
             layers.zones = L.layerGroup().addTo(map);
             layers.stations = L.layerGroup().addTo(map);
@@ -1821,309 +1850,312 @@
             layers.house = L.layerGroup().addTo(map);
             layers.route = L.layerGroup().addTo(map);
 
-            map.on('click', (e) => {
+            map.on('click', function (e) {
                 if (!pinSelectMode) return;
-                const lat = +e.latlng.lat.toFixed(6);
-                const lng = +e.latlng.lng.toFixed(6);
-
+                const { lat, lng } = e.latlng;
                 if (pinSelectMode === 'house') {
-                    state.lat = lat;
-                    state.lng = lng;
-                    state.address = `Vị trí đã ghim (${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E)`;
+                    state.lat = +lat.toFixed(6);
+                    state.lng = +lng.toFixed(6);
+                    state.address = `Vị trí ghim bản đồ (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
                     persistState();
                     cancelPinSelectMode();
                     refreshAllViews();
-                    showPushBanner('Đã cập nhật vị trí ngôi nhà', `Tọa độ mới: ${lat}, ${lng}`, '#1B4D3E');
+                    if (hasActiveRoute) showEvacRoute();
+                    showPushBanner('Đã cập nhật vị trí nhà', state.address, '#1B4D3E');
                 } else if (pinSelectMode === 'origin') {
                     state.useCustomOrigin = true;
-                    state.customOriginLat = lat;
-                    state.customOriginLng = lng;
+                    state.customOriginLat = +lat.toFixed(6);
+                    state.customOriginLng = +lng.toFixed(6);
                     persistState();
                     cancelPinSelectMode();
-                    updateOriginDestLabels();
-                    showPushBanner('Đã chọn Điểm đi tùy chỉnh', `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`, '#1B4D3E');
-                    // Tự động tính lại lộ trình nếu đang mở
-                    if (hasActiveRoute) {
-                        showEvacRoute();
-                    }
+                    isRouteCardVisible = true;
+                    showEvacRoute();
                 } else if (pinSelectMode === 'dest') {
                     state.useCustomDest = true;
-                    state.customDestLat = lat;
-                    state.customDestLng = lng;
-                    state.customDestName = `Điểm đến tùy chỉnh (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-                    state.selectedShelterIdx = -1;
+                    state.customDestLat = +lat.toFixed(6);
+                    state.customDestLng = +lng.toFixed(6);
+                    state.customDestName = `Điểm đến trên bản đồ (${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E)`;
                     persistState();
                     cancelPinSelectMode();
-                    updateOriginDestLabels();
+                    isRouteCardVisible = true;
                     showEvacRoute();
-                    showPushBanner('Đã chọn Điểm đến tùy chỉnh', state.customDestName, '#16A34A');
                 }
             });
-
-            const mapEl = document.getElementById('hueGisMap');
-            if (window.ResizeObserver && mapEl) {
-                const ro = new ResizeObserver(() => {
-                    if (map) map.invalidateSize();
-                });
-                ro.observe(mapEl);
-            }
         }
 
         function renderGisLayers() {
-            if (!map) return;
+            if (!map || !layers.house) return;
             layers.zones.clearLayers();
             layers.stations.clearLayers();
             layers.hazards.clearLayers();
             layers.shelters.clearLayers();
             layers.house.clearLayers();
 
-            const activeSt = getActiveStation();
-            const activeStLvl = getStationLevel(activeSt);
+            const flood = evaluateHouseholdFlood();
+            // Mực nước Sông Hương nội đô lấy theo giá trị cao nhất giữa Kim Long và Dã Viên
+            const huongUrbanLevel = Math.max(getStationLevel('kimlong'), getStationLevel('davien'));
 
-            if (state.showFloodZones && state.kimLongLevel > 0) {
+            // 1. Vùng ngập GIS nội đô Sông Hương
+            if (state.showFloodZones) {
                 FLOOD_RISK_ZONES.forEach(z => {
-                    if (state.kimLongLevel >= z.trigger) {
-                        const expand = (state.kimLongLevel - z.trigger) * 145;
-                        L.circle([z.lat, z.lng], {
-                            radius: z.radius + expand,
-                            color: '#DC2626',
-                            weight: 1.5,
-                            fillColor: '#EF4444',
-                            fillOpacity: 0.22
-                        }).bindTooltip(`${z.name} (Nguy cơ ngập)`).addTo(layers.zones);
-                    }
+                    const active = huongUrbanLevel >= z.trigger;
+                    L.circle([z.lat, z.lng], {
+                        radius: z.radius + (active ? (huongUrbanLevel - z.trigger) * 90 : 0),
+                        color: active ? '#DC2626' : '#EAB308',
+                        weight: active ? 2 : 1,
+                        fillColor: active ? '#EF4444' : '#FACC15',
+                        fillOpacity: active ? 0.32 : 0.10
+                    }).bindPopup(`<b>${escapeHTML(z.name)}</b><br>Kích hoạt từ: ${z.trigger.toFixed(2)}m`).addTo(layers.zones);
                 });
             }
 
-            (state.roadCutoffs || []).forEach((road, idx) => {
-                if (activeStLvl >= road.trigger) {
-                    // Chỉ vẽ biển báo đỏ khi điểm ngập đã có tọa độ thật (tránh vẽ cạnh nhà)
-                    if (!Number.isFinite(+road.lat) || !Number.isFinite(+road.lng)) return;
-                    const rLat = +road.lat;
-                    const rLng = +road.lng;
-                    const warnHtml = `
-                        <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full">
-                            <div class="px-2 py-0.5 rounded-lg bg-red-600 text-white text-[9.5px] font-extrabold whitespace-nowrap shadow-md border border-white">
-                                ⚠ ${road.title} (≥${road.trigger.toFixed(2)}m)
-                            </div>
-                            <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-600"></div>
-                        </div>
-                    `;
-                    L.marker([rLat, rLng], { icon: L.divIcon({ html: warnHtml, iconSize: [0, 0] }) }).addTo(layers.hazards);
-                }
+            // 2. Điểm chia cắt đường khu vực (đối chiếu đúng trạm thuộc lưu vực sông của điểm đó)
+            (state.roadCutoffs || []).forEach(r => {
+                if (!Number.isFinite(+r.lat) || !Number.isFinite(+r.lng)) return;
+                const refLvl = getRoadEffectiveLevel(r);
+                const isCut = refLvl >= r.trigger;
+                const icon = L.divIcon({
+                    html: `<div style="background:${isCut ? '#DC2626' : '#F59E0B'};color:white;padding:2px 6px;border-radius:6px;font-size:9.5px;font-weight:800;border:1.5px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.25);white-space:nowrap;">⚠ ${escapeHTML(r.title.split('(')[0].trim())}</div>`,
+                    iconSize: [0, 0], className: ''
+                });
+                L.marker([+r.lat, +r.lng], { icon })
+                    .bindPopup(`<b>${escapeHTML(r.title)}</b><br>Ngưỡng ngập: ${r.trigger.toFixed(2)}m<br>${escapeHTML(r.detail)}`)
+                    .addTo(layers.hazards);
             });
 
-            HYDRO_STATIONS.forEach(st => {
-                const lvl = getStationLevel(st).toFixed(2);
-                const active = st.id === state.stationId;
-                const stHtml = `
-                    <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full">
-                        <div class="px-2 py-1 rounded-xl ${active ? 'bg-[#1B4D3E] text-white' : 'bg-white/95 text-[#1B4D3E]'} text-[10px] font-extrabold whitespace-nowrap shadow-md border border-[#1B4D3E]/25">
-                            ${st.name}: ${lvl}m
-                        </div>
-                        <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] ${active ? 'border-t-[#1B4D3E]' : 'border-t-white'}"></div>
-                    </div>
-                `;
-                L.marker([st.lat, st.lng], { icon: L.divIcon({ html: stHtml, iconSize: [0, 0] }) }).addTo(layers.stations);
+            // 3. Các trạm thủy văn độc lập
+            HYDRO_STATIONS.forEach(station => {
+                const lvl = getStationLevel(station);
+                const tier = getOfficialAlertTier(station, lvl);
+                const icon = L.divIcon({
+                    html: `<div style="background:#FFFFFF;color:#1B4D3E;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;border:2px solid ${tier.color};box-shadow:0 2px 6px rgba(0,0,0,0.2);white-space:nowrap;">${station.name}: ${lvl.toFixed(2)}m</div>`,
+                    iconSize: [0, 0], className: ''
+                });
+                L.marker([station.lat, station.lng], { icon }).addTo(layers.stations);
             });
 
-            const bridgeHtml = `
-                <div class="px-2 py-0.5 rounded-lg bg-[#4A148C] text-white text-[9.5px] font-bold whitespace-nowrap shadow-sm -translate-x-1/2 -translate-y-1/2">
-                    Cầu Trường Tiền
-                </div>
-            `;
-            L.marker([16.4689, 107.5887], { icon: L.divIcon({ html: bridgeHtml, iconSize: [0, 0] }) }).addTo(layers.stations);
-
+            // 4. Các điểm sơ tán an toàn
             EVAC_SHELTERS.forEach((sh, idx) => {
-                const isChosen = idx === state.selectedShelterIdx;
-                const shHtml = `
-                    <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full cursor-pointer">
-                        <div class="px-2.5 py-1 rounded-xl ${isChosen ? 'bg-[#16A34A] text-white' : 'bg-white text-[#16A34A]'} text-[10px] font-extrabold whitespace-nowrap shadow-md border border-[#16A34A]">
-                            Điểm sơ tán: ${sh.short}
-                        </div>
-                        <div class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] ${isChosen ? 'border-t-[#16A34A]' : 'border-t-white'}"></div>
-                    </div>
-                `;
-                const m = L.marker([sh.lat, sh.lng], { icon: L.divIcon({ html: shHtml, iconSize: [0, 0] }) });
-                m.on('click', () => selectShelter(idx));
-                m.addTo(layers.shelters);
+                const icon = L.divIcon({
+                    html: `<div style="background:#ECFDF5;color:#15803D;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;border:1.5px solid #16A34A;box-shadow:0 2px 5px rgba(0,0,0,0.18);white-space:nowrap;">🏥 ${sh.short}</div>`,
+                    iconSize: [0, 0], className: ''
+                });
+                const mk = L.marker([sh.lat, sh.lng], { icon }).addTo(layers.shelters);
+                mk.on('click', () => selectShelter(idx));
             });
 
-            const flood = evaluateHouseholdFlood();
-            const typeTag = state.houseType === '1floor' ? '1 tầng' : '2 tầng';
-            const houseHtml = `
-                <div class="relative flex flex-col items-center -translate-x-1/2 -translate-y-1/2 cursor-grab">
-                    <div class="absolute w-12 h-12 rounded-full radar-pulse" style="background-color: ${flood.color};"></div>
-                    <div class="mb-1 px-2 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-extrabold whitespace-nowrap shadow-md">
-                        Nhà ${typeTag} • ${flood.shortBadge}
-                    </div>
-                    <div class="relative w-9 h-9 rounded-full text-white flex items-center justify-center shadow-lg border-2 border-white" style="background-color: ${flood.color};">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-                        </svg>
-                    </div>
-                </div>
-            `;
-            const houseMarker = L.marker([state.lat, state.lng], {
-                icon: L.divIcon({ html: houseHtml, iconSize: [0, 0] }),
-                draggable: true
+            // 5. Ghim ngôi nhà của hộ dân
+            const houseIcon = L.divIcon({
+                html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;">
+                    <span class="radar-pulse" style="position:absolute;width:34px;height:34px;border-radius:50%;background:${flood.color};"></span>
+                    <div style="position:relative;background:${flood.color};color:white;padding:4px 9px;border-radius:10px;font-size:10.5px;font-weight:900;border:2.5px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.35);white-space:nowrap;">🏠 Nhà tôi</div>
+                </div>`,
+                iconSize: [0, 0], className: ''
             });
-            houseMarker.on('dragend', (e) => {
-                const pos = e.target.getLatLng();
+            const houseMarker = L.marker([state.lat, state.lng], { icon: houseIcon, draggable: true }).addTo(layers.house);
+            houseMarker.on('dragend', function (ev) {
+                const pos = ev.target.getLatLng();
                 state.lat = +pos.lat.toFixed(6);
                 state.lng = +pos.lng.toFixed(6);
                 state.address = `Vị trí kéo ghim (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
                 persistState();
                 refreshAllViews();
-                if (hasActiveRoute) {
-                    showEvacRoute();
-                }
+                if (hasActiveRoute) showEvacRoute();
             });
-            houseMarker.addTo(layers.house);
         }
 
-        function jumpToNeighborhood(index) {
-            const item = HUE_NEIGHBORHOODS[index];
-            if (!item) return;
-            state.lat = item.lat;
-            state.lng = item.lng;
-            state.address = item.address;
-            state.stationId = item.station;
-            if (item.areaKey && AREA_ROAD_PRESETS[item.areaKey]) {
-                state.roadAreaKey = item.areaKey;
-                state.roadCutoffs = JSON.parse(JSON.stringify(AREA_ROAD_PRESETS[item.areaKey].roads));
-            }
-            persistState();
-
-            document.querySelectorAll('.neighborhood-pill').forEach((btn, idx) => {
-                btn.className = idx === index
+        function jumpToNeighborhood(idx) {
+            const nb = HUE_NEIGHBORHOODS[idx];
+            if (!nb) return;
+            document.querySelectorAll('.neighborhood-pill').forEach((btn, i) => {
+                btn.className = i === idx
                     ? 'neighborhood-pill px-2.5 py-1 rounded-full bg-[#1B4D3E] text-white text-[11px] font-bold whitespace-nowrap'
                     : 'neighborhood-pill px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 text-[11px] font-bold whitespace-nowrap';
             });
-
-            refreshAllViews();
-            if (map) map.setView([state.lat, state.lng], 15);
-            showPushBanner('Đã chuyển khu vực định vị', item.address, '#1B4D3E');
+            if (map) map.setView([nb.lat, nb.lng], 15);
         }
 
         function togglePinMode(enable) {
-            if (enable) {
-                pinSelectMode = 'house';
-                isPinMode = true;
-                document.getElementById('pinModeTitle').textContent = 'Chạm trực tiếp vào vị trí nhà bạn';
-                document.getElementById('pinModeSub').textContent = 'Hoặc kéo ghim "Nhà tôi" đến đúng hẻm/số nhà';
-                document.getElementById('pinModeBanner').classList.remove('hidden');
-                document.getElementById('mapTopControls').classList.add('hidden');
-            } else {
-                cancelPinSelectMode();
-            }
-        }
-
-        function cancelPinSelectMode() {
-            pinSelectMode = null;
-            isPinMode = false;
-            document.getElementById('pinModeBanner').classList.add('hidden');
-            document.getElementById('mapTopControls').classList.remove('hidden');
+            pinSelectMode = enable ? 'house' : null;
+            document.getElementById('pinModeTitle').textContent = 'Chạm trực tiếp vào vị trí nhà bạn';
+            document.getElementById('pinModeSub').textContent = 'Hoặc kéo ghim "Nhà tôi" đến đúng hẻm/số nhà';
+            document.getElementById('pinModeBanner').classList.toggle('hidden', !enable);
         }
 
         function startSelectOrigin() {
-            // Nếu đã có custom thì cho phép reset về nhà
-            if (state.useCustomOrigin) {
-                state.useCustomOrigin = false;
-                state.customOriginLat = null;
-                state.customOriginLng = null;
-                persistState();
-                updateOriginDestLabels();
-                showPushBanner('Đã đặt lại Điểm đi = Nhà tôi', 'Sử dụng vị trí ngôi nhà hiện tại làm điểm xuất phát.', '#1B4D3E');
-                if (hasActiveRoute) showEvacRoute();
-                return;
-            }
             pinSelectMode = 'origin';
-            document.getElementById('pinModeTitle').textContent = 'Chạm bản đồ để chọn Điểm đi';
-            document.getElementById('pinModeSub').textContent = 'Điểm xuất phát cho lộ trình sơ tán (có thể khác nhà)';
+            document.getElementById('pinModeTitle').textContent = 'Chạm bản đồ để chọn ĐIỂM ĐI';
+            document.getElementById('pinModeSub').textContent = 'Tuyến đường sẽ xuất phát từ điểm bạn chạm';
             document.getElementById('pinModeBanner').classList.remove('hidden');
-            document.getElementById('mapTopControls').classList.add('hidden');
-            showPushBanner('Chế độ chọn Điểm đi', 'Chạm lên bản đồ để đặt điểm xuất phát.', '#1B4D3E');
         }
 
         function startSelectDest() {
             pinSelectMode = 'dest';
-            document.getElementById('pinModeTitle').textContent = 'Chạm bản đồ để chọn Điểm đến';
-            document.getElementById('pinModeSub').textContent = 'Hoặc dùng các nút điểm sơ tán / điểm cao ráo bên dưới';
+            document.getElementById('pinModeTitle').textContent = 'Chạm bản đồ để chọn ĐIỂM ĐẾN';
+            document.getElementById('pinModeSub').textContent = 'Hệ thống tự động tìm đường tránh ngập tới điểm này';
             document.getElementById('pinModeBanner').classList.remove('hidden');
-            document.getElementById('mapTopControls').classList.add('hidden');
-            showPushBanner('Chế độ chọn Điểm đến', 'Chạm bản đồ hoặc chọn nhanh từ danh sách điểm sơ tán.', '#16A34A');
         }
 
-        function updateOriginDestLabels() {
-            const originLabel = document.getElementById('originBtnLabel');
-            const destLabel = document.getElementById('destBtnLabel');
-            if (originLabel) {
-                originLabel.textContent = state.useCustomOrigin
-                    ? `Điểm đi: Tùy chỉnh`
-                    : 'Điểm đi: Nhà tôi';
-            }
-            if (destLabel) {
-                if (state.useCustomDest) {
-                    destLabel.textContent = 'Điểm đến: Tùy chỉnh';
-                } else if (state.selectedShelterIdx >= 0 && EVAC_SHELTERS[state.selectedShelterIdx]) {
-                    destLabel.textContent = `Đến: ${EVAC_SHELTERS[state.selectedShelterIdx].short}`;
-                } else {
-                    destLabel.textContent = 'Điểm đến: Chọn';
-                }
-            }
+        function cancelPinSelectMode() {
+            pinSelectMode = null;
+            document.getElementById('pinModeBanner').classList.add('hidden');
         }
 
         function toggleFloodLayer() {
             state.showFloodZones = !state.showFloodZones;
             const btn = document.getElementById('btnFloodLayer');
-            btn.className = state.showFloodZones
-                ? 'px-2.5 py-1.5 rounded-xl bg-[#1B4D3E] text-white flex items-center gap-1 whitespace-nowrap'
-                : 'px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center gap-1 whitespace-nowrap';
+            if (btn) {
+                btn.className = state.showFloodZones
+                    ? 'px-2.5 py-1.5 rounded-xl bg-[#1B4D3E] text-white flex items-center gap-1 whitespace-nowrap'
+                    : 'px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center gap-1 whitespace-nowrap';
+            }
+            persistState();
             renderGisLayers();
         }
 
         function locateMyGPS() {
             if (!navigator.geolocation) {
-                if (map) map.setView([state.lat, state.lng], 15);
+                showPushBanner('Trình duyệt không hỗ trợ GPS', 'Vui lòng chạm trực tiếp lên bản đồ để ghim nhà.', '#EA580C');
                 return;
             }
-            showPushBanner('Đang xác định tọa độ GPS...', 'Đang lấy vị trí hiện tại của thiết bị tại Huế.', '#1B4D3E');
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
+                pos => {
                     state.lat = +pos.coords.latitude.toFixed(6);
                     state.lng = +pos.coords.longitude.toFixed(6);
-                    state.address = `Tọa độ GPS (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
+                    state.address = `Vị trí GPS (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
                     persistState();
                     refreshAllViews();
                     if (map) map.setView([state.lat, state.lng], 16);
-                    showPushBanner('Đã định vị ngôi nhà qua GPS', state.address, '#16A34A');
+                    if (hasActiveRoute) showEvacRoute();
+                    showPushBanner('Đã định vị GPS thành công', state.address, '#16A34A');
                 },
-                () => {
-                    if (map) map.setView([state.lat, state.lng], 15);
-                    showPushBanner('Sử dụng vị trí đã lưu', state.address, '#1B4D3E');
-                },
-                { timeout: 5000 }
+                () => showPushBanner('Không lấy được tín hiệu GPS', 'Hãy bật quyền Vị trí hoặc kéo ghim "Nhà tôi" trên bản đồ.', '#EA580C'),
+                { enableHighAccuracy: true, timeout: 6000 }
             );
         }
 
         function selectShelter(idx) {
             state.selectedShelterIdx = idx;
             state.useCustomDest = false;
-            state.customDestLat = null;
-            state.customDestLng = null;
-            state.customDestName = '';
-            persistState();
             document.querySelectorAll('.shelter-btn').forEach((btn, i) => {
                 btn.className = i === idx
                     ? 'shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold'
                     : 'shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold';
             });
-            updateOriginDestLabels();
+            persistState();
+            isRouteCardVisible = true;
             showEvacRoute();
         }
 
-        // ========== THUẬT TOÁN TÌM ĐƯỜNG NGẮN NHẤT TRÁNH NGẬP (Dijkstra trên đồ thị điểm nút) ==========
+        function updateOriginDestLabels() {
+            const origin = getOriginCoords();
+            const dest = getDestCoords();
+            const oEl = document.getElementById('originBtnLabel');
+            const dEl = document.getElementById('destBtnLabel');
+            if (oEl) oEl.textContent = `Điểm đi: ${origin.name}`;
+            if (dEl) dEl.textContent = `Đến: ${dest.name.split('(')[0].trim()}`;
+        }
+
+        // =====================================================================
+        // MẠNG LƯỚI GIAO LỘ & TRỤC ĐƯỜNG BỘ TP. HUẾ (DỰ PHÒNG OFFLINE + CHỐT TRÁNH NGẬP)
+        // =====================================================================
+        const HUE_ROAD_NODES = {
+            kl_tay:        { name: 'Kim Long - Hương Long', lat: 16.4585, lng: 107.5480 },
+            kl_giua:       { name: 'Đường Kim Long (Chùa Thiên Mụ)', lat: 16.4595, lng: 107.5565 },
+            kl_dong:       { name: 'Ngã ba Kim Long - Lê Duẩn', lat: 16.4622, lng: 107.5655 },
+            cau_dv_bac:    { name: 'Đầu Bắc Cầu Dã Viên', lat: 16.4648, lng: 107.5672 },
+            le_duan_cua_ngan: { name: 'Lê Duẩn - Cửa Ngăn', lat: 16.4668, lng: 107.5750 },
+            le_duan_px:    { name: 'Lê Duẩn - Trần Hưng Đạo', lat: 16.4682, lng: 107.5825 },
+            cau_px_bac:    { name: 'Đầu Bắc Cầu Phú Xuân', lat: 16.4675, lng: 107.5835 },
+            thd_dong_ba:   { name: 'Trần Hưng Đạo - Chợ Đông Ba', lat: 16.4702, lng: 107.5868 },
+            cau_tt_bac:    { name: 'Đầu Bắc Cầu Trường Tiền', lat: 16.4701, lng: 107.5877 },
+            htk_mai_thuc_loan: { name: 'Huỳnh Thúc Kháng - Mai Thúc Loan', lat: 16.4755, lng: 107.5865 },
+            htk_cua_trai:  { name: 'Huỳnh Thúc Kháng - Cửa Trài', lat: 16.4805, lng: 107.5875 },
+            cau_gia_hoi:   { name: 'Cầu Gia Hội - Bạch Đằng', lat: 16.4775, lng: 107.5905 },
+            chi_lang_phu_hau: { name: 'Chi Lăng - Phú Hậu', lat: 16.4842, lng: 107.5960 },
+            nguyen_trai_thuan_hoa: { name: 'Nguyễn Trãi - Thuận Hòa', lat: 16.4725, lng: 107.5740 },
+            tay_loc:       { name: 'Tây Lộc - Nguyễn Trãi', lat: 16.4785, lng: 107.5715 },
+            huong_so:      { name: 'Đường Lý Thái Tổ - Hương Sơ', lat: 16.4820, lng: 107.5610 },
+            cau_bh_bac:    { name: 'Đầu Bắc Cầu Bạch Hổ', lat: 16.4565, lng: 107.5795 },
+
+            cau_dv:        { name: 'Cầu Dã Viên', lat: 16.4632, lng: 107.5675, isBridge: true },
+            cau_px:        { name: 'Cầu Phú Xuân', lat: 16.4658, lng: 107.5848, isBridge: true },
+            cau_tt:        { name: 'Cầu Trường Tiền', lat: 16.4689, lng: 107.5887, isBridge: true },
+            cau_bh:        { name: 'Cầu Bạch Hổ', lat: 16.4545, lng: 107.5805, isBridge: true },
+
+            cau_dv_nam:    { name: 'Đầu Nam Cầu Dã Viên (Bùi Thị Xuân)', lat: 16.4615, lng: 107.5682 },
+            btx_ga_hue:    { name: 'Bùi Thị Xuân - Ga Huế', lat: 16.4585, lng: 107.5765 },
+            cau_bh_nam:    { name: 'Đầu Nam Cầu Bạch Hổ', lat: 16.4532, lng: 107.5812 },
+            le_loi_ga:     { name: 'Lê Lợi - Điện Biên Phủ', lat: 16.4598, lng: 107.5815 },
+            le_loi_bv:     { name: 'Lê Lợi - BV Trung ương Huế', lat: 16.4622, lng: 107.5865 },
+            cau_px_nam:    { name: 'Đầu Nam Cầu Phú Xuân (Hà Nội)', lat: 16.4642, lng: 107.5860 },
+            le_loi_sp:     { name: 'Lê Lợi - ĐH Sư phạm Huế', lat: 16.4675, lng: 107.5882 },
+            cau_tt_nam:    { name: 'Đầu Nam Cầu Trường Tiền (Hùng Vương)', lat: 16.4678, lng: 107.5898 },
+            le_loi_dap_da: { name: 'Lê Lợi - Ngã ba Đập Đá', lat: 16.4718, lng: 107.5960 },
+            dap_da_bridge: { name: 'Đập Đá (Ngập từ 1.80m)', lat: 16.4733, lng: 107.5982 },
+            vy_da_pvd:     { name: 'Phạm Văn Đồng - Vỹ Dạ', lat: 16.4752, lng: 107.6048 },
+            vy_da_nsc:     { name: 'Nguyễn Sinh Cung - Vỹ Dạ', lat: 16.4765, lng: 107.6005 },
+            ben_nghe_nct:  { name: 'Nguyễn Công Trứ - Bến Nghé', lat: 16.4694, lng: 107.5945 },
+            dong_da_nh:    { name: 'Ngã tư Nguyễn Huệ - Đống Đa', lat: 16.4612, lng: 107.5895 },
+            hung_vuong_dd: { name: 'Ngã sáu Hùng Vương - Đống Đa', lat: 16.4638, lng: 107.5948 },
+            nguyen_hue_dbp:{ name: 'Nguyễn Huệ - Điện Biên Phủ', lat: 16.4562, lng: 107.5842 },
+            an_cuu:        { name: 'Cầu An Cựu - Hùng Vương', lat: 16.4550, lng: 107.5955 },
+            dbp_nam_giao:  { name: 'Điện Biên Phủ - Đàn Nam Giao', lat: 16.4455, lng: 107.5750 },
+            vong_canh:     { name: 'Huyền Trân Công Chúa - Đồi Vọng Cảnh', lat: 16.4405, lng: 107.5620 }
+        };
+
+        const HUE_ROAD_EDGES = [
+            ['kl_tay', 'kl_giua'], ['kl_giua', 'kl_dong'], ['kl_dong', 'cau_dv_bac'],
+            ['kl_dong', 'le_duan_cua_ngan'], ['le_duan_cua_ngan', 'le_duan_px'],
+            ['le_duan_px', 'cau_px_bac'], ['le_duan_px', 'thd_dong_ba'],
+            ['thd_dong_ba', 'cau_tt_bac'], ['thd_dong_ba', 'htk_mai_thuc_loan'],
+            ['thd_dong_ba', 'cau_gia_hoi'], ['cau_gia_hoi', 'chi_lang_phu_hau'],
+            ['htk_mai_thuc_loan', 'htk_cua_trai'], ['htk_cua_trai', 'chi_lang_phu_hau'],
+            ['htk_mai_thuc_loan', 'nguyen_trai_thuan_hoa'], ['le_duan_cua_ngan', 'nguyen_trai_thuan_hoa'],
+            ['nguyen_trai_thuan_hoa', 'tay_loc'], ['tay_loc', 'huong_so'],
+            ['kl_giua', 'huong_so'], ['kl_dong', 'cau_bh_bac'],
+
+            ['cau_dv_bac', 'cau_dv'], ['cau_dv', 'cau_dv_nam'],
+            ['cau_px_bac', 'cau_px'], ['cau_px', 'cau_px_nam'],
+            ['cau_tt_bac', 'cau_tt'], ['cau_tt', 'cau_tt_nam'],
+            ['cau_bh_bac', 'cau_bh'], ['cau_bh', 'cau_bh_nam'],
+
+            ['cau_dv_nam', 'btx_ga_hue'], ['cau_dv_nam', 'vong_canh'],
+            ['btx_ga_hue', 'cau_bh_nam'], ['btx_ga_hue', 'le_loi_ga'],
+            ['le_loi_ga', 'le_loi_bv'], ['le_loi_ga', 'nguyen_hue_dbp'],
+            ['le_loi_bv', 'cau_px_nam'], ['cau_px_nam', 'le_loi_sp'],
+            ['le_loi_sp', 'cau_tt_nam'], ['cau_tt_nam', 'le_loi_dap_da'],
+            ['cau_tt_nam', 'hung_vuong_dd'], ['cau_tt_nam', 'ben_nghe_nct'],
+            ['le_loi_dap_da', 'ben_nghe_nct'], ['le_loi_dap_da', 'dap_da_bridge'],
+            ['dap_da_bridge', 'vy_da_nsc'], ['vy_da_nsc', 'vy_da_pvd'],
+            ['ben_nghe_nct', 'hung_vuong_dd'], ['hung_vuong_dd', 'dong_da_nh'],
+            ['hung_vuong_dd', 'an_cuu'], ['dong_da_nh', 'le_loi_bv'],
+            ['dong_da_nh', 'nguyen_hue_dbp'], ['dong_da_nh', 'an_cuu'],
+            ['nguyen_hue_dbp', 'dbp_nam_giao'], ['an_cuu', 'dbp_nam_giao'],
+            ['dbp_nam_giao', 'vong_canh']
+        ];
+
+        const BRIDGE_NODE_IDS = new Set(['cau_tt', 'cau_px', 'cau_dv', 'cau_bh']);
+
+        function isCrossRiverWithoutBridge(nodeA, nodeB) {
+            if (BRIDGE_NODE_IDS.has(nodeA.id) || BRIDGE_NODE_IDS.has(nodeB.id)) {
+                return false;
+            }
+            const bankA = getRiverBank(nodeA.lat, nodeA.lng);
+            const bankB = getRiverBank(nodeB.lat, nodeB.lng);
+            return bankA !== bankB;
+        }
+
+        function escapeHTML(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         function haversineKm(lat1, lng1, lat2, lng2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -2136,28 +2168,26 @@
 
         function getActiveFloodObstacles() {
             const obstacles = [];
-            const st = getActiveStation();
-            const stLvl = getStationLevel(st);
+            const huongUrbanLevel = Math.max(getStationLevel('kimlong'), getStationLevel('davien'));
 
-            // Road cutoffs đã kích hoạt — chỉ dùng làm vật cản khi đã có tọa độ thật
             (state.roadCutoffs || []).forEach(r => {
-                if (stLvl >= r.trigger && Number.isFinite(+r.lat) && Number.isFinite(+r.lng)) {
+                const refLvl = getRoadEffectiveLevel(r);
+                if (refLvl >= r.trigger && Number.isFinite(+r.lat) && Number.isFinite(+r.lng)) {
                     obstacles.push({
                         lat: +r.lat,
                         lng: +r.lng,
-                        radiusM: 180 + Math.min(120, (stLvl - r.trigger) * 80),
+                        radiusM: 160 + Math.min(120, (refLvl - r.trigger) * 70),
                         title: r.title
                     });
                 }
             });
 
-            // Flood risk zones
             FLOOD_RISK_ZONES.forEach(z => {
-                if (state.kimLongLevel >= z.trigger) {
+                if (huongUrbanLevel >= z.trigger) {
                     obstacles.push({
                         lat: z.lat,
                         lng: z.lng,
-                        radiusM: z.radius + (state.kimLongLevel - z.trigger) * 100,
+                        radiusM: z.radius + (huongUrbanLevel - z.trigger) * 90,
                         title: z.name
                     });
                 }
@@ -2167,14 +2197,13 @@
 
         function isSegmentBlocked(lat1, lng1, lat2, lng2, obstacles) {
             if (!obstacles || obstacles.length === 0) return false;
-            // Sample 8 points along the segment
             for (let i = 0; i <= 8; i++) {
                 const t = i / 8;
                 const lat = lat1 + (lat2 - lat1) * t;
                 const lng = lng1 + (lng2 - lng1) * t;
                 for (const obs of obstacles) {
                     const distM = haversineKm(lat, lng, obs.lat, obs.lng) * 1000;
-                    if (distM < obs.radiusM + 40) { // buffer 40m
+                    if (distM < obs.radiusM + 35) {
                         return true;
                     }
                 }
@@ -2198,44 +2227,60 @@
         }
 
         function findShortestSafePath(origin, dest, obstacles) {
-            // Nodes: origin + dest + KEY_WAYPOINTS
-            const nodes = [
-                { id: 'ORIGIN', lat: origin.lat, lng: origin.lng, name: origin.name },
-                { id: 'DEST', lat: dest.lat, lng: dest.lng, name: dest.name }
-            ];
-            KEY_WAYPOINTS.forEach(wp => {
-                nodes.push({ id: wp.id, lat: wp.lat, lng: wp.lng, name: wp.name });
+            const nodes = {
+                ORIGIN: { id: 'ORIGIN', lat: origin.lat, lng: origin.lng, name: origin.name },
+                DEST:   { id: 'DEST',   lat: dest.lat,   lng: dest.lng,   name: dest.name }
+            };
+            Object.entries(HUE_ROAD_NODES).forEach(([id, data]) => {
+                nodes[id] = { id, ...data };
             });
 
-            // Build adjacency (undirected) — chỉ nối nếu khoảng cách hợp lý và không bị chặn bởi vùng ngập
-            const MAX_EDGE_KM = 2.8;
             const graph = {};
-            nodes.forEach(n => { graph[n.id] = []; });
+            Object.keys(nodes).forEach(id => { graph[id] = []; });
 
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    const a = nodes[i], b = nodes[j];
-                    const d = haversineKm(a.lat, a.lng, b.lat, b.lng);
-                    if (d > MAX_EDGE_KM || d < 0.01) continue;
-                    if (isSegmentBlocked(a.lat, a.lng, b.lat, b.lng, obstacles)) continue;
-                    graph[a.id].push({ to: b.id, dist: d });
-                    graph[b.id].push({ to: a.id, dist: d });
-                }
-            }
+            const addEdge = (idA, idB, allowBlockedFallback = false) => {
+                const a = nodes[idA], b = nodes[idB];
+                if (!a || !b) return;
+                if (isCrossRiverWithoutBridge(a, b)) return;
+                const d = haversineKm(a.lat, a.lng, b.lat, b.lng);
+                const blocked = isSegmentBlocked(a.lat, a.lng, b.lat, b.lng, obstacles);
+                if (blocked && !allowBlockedFallback) return;
+                const weight = blocked ? d + 50 : d;
+                graph[idA].push({ to: idB, dist: weight, realDist: d });
+                graph[idB].push({ to: idA, dist: weight, realDist: d });
+            };
 
-            // Dijkstra
+            HUE_ROAD_EDGES.forEach(([u, v]) => addEdge(u, v, false));
+
+            const attachTerminalNode = (termId) => {
+                const term = nodes[termId];
+                const candidates = Object.values(nodes)
+                    .filter(n => n.id !== 'ORIGIN' && n.id !== 'DEST' && !isCrossRiverWithoutBridge(term, n))
+                    .map(n => ({ id: n.id, d: haversineKm(term.lat, term.lng, n.lat, n.lng) }))
+                    .sort((a, b) => a.d - b.d)
+                    .slice(0, 3);
+                candidates.forEach(c => addEdge(termId, c.id, false));
+            };
+            attachTerminalNode('ORIGIN');
+            attachTerminalNode('DEST');
+
             const dist = {};
+            const realDist = {};
             const prev = {};
             const visited = new Set();
-            nodes.forEach(n => { dist[n.id] = Infinity; prev[n.id] = null; });
+            Object.keys(nodes).forEach(id => {
+                dist[id] = Infinity;
+                realDist[id] = 0;
+                prev[id] = null;
+            });
             dist['ORIGIN'] = 0;
 
             while (true) {
                 let u = null, best = Infinity;
-                for (const n of nodes) {
-                    if (!visited.has(n.id) && dist[n.id] < best) {
-                        best = dist[n.id];
-                        u = n.id;
+                for (const id of Object.keys(nodes)) {
+                    if (!visited.has(id) && dist[id] < best) {
+                        best = dist[id];
+                        u = id;
                     }
                 }
                 if (u === null || u === 'DEST') break;
@@ -2245,22 +2290,23 @@
                     const alt = dist[u] + edge.dist;
                     if (alt < dist[edge.to]) {
                         dist[edge.to] = alt;
+                        realDist[edge.to] = realDist[u] + edge.realDist;
                         prev[edge.to] = u;
                     }
                 }
             }
 
             if (dist['DEST'] === Infinity) {
-                // Không tìm được đường an toàn → fallback: đường thẳng + cảnh báo
                 return {
                     path: [[origin.lat, origin.lng], [dest.lat, dest.lng]],
+                    waypoints: [origin, dest],
                     totalKm: haversineKm(origin.lat, origin.lng, dest.lat, dest.lng),
                     viaNames: [],
-                    blocked: true
+                    blocked: true,
+                    source: 'offline_fallback'
                 };
             }
 
-            // Reconstruct path
             const pathIds = [];
             let cur = 'DEST';
             while (cur) {
@@ -2269,28 +2315,166 @@
             }
             pathIds.reverse();
 
-            const idToNode = {};
-            nodes.forEach(n => { idToNode[n.id] = n; });
-            const path = pathIds.map(id => [idToNode[id].lat, idToNode[id].lng]);
+            const waypoints = pathIds.map(id => nodes[id]);
+            const path = waypoints.map(n => [n.lat, n.lng]);
             const viaNames = pathIds
                 .filter(id => id !== 'ORIGIN' && id !== 'DEST')
-                .map(id => idToNode[id].name);
+                .map(id => nodes[id].name);
 
             return {
                 path,
-                totalKm: dist['DEST'],
+                waypoints,
+                totalKm: realDist['DEST'] || dist['DEST'],
                 viaNames,
-                blocked: false
+                blocked: false,
+                source: 'offline_graph'
             };
         }
 
-        function showEvacRoute(forceShowCard) {
+        let currentRouteReqId = 0;
+
+        async function fetchOsrmRoadGeometry(waypoints, obstacles) {
+            if (!navigator.onLine) return null;
+
+            let sampled = waypoints;
+            if (waypoints.length > 10) {
+                const step = Math.ceil((waypoints.length - 2) / 8);
+                sampled = [waypoints[0]];
+                for (let i = 1; i < waypoints.length - 1; i += step) {
+                    sampled.push(waypoints[i]);
+                }
+                sampled.push(waypoints[waypoints.length - 1]);
+            }
+
+            const coordStr = sampled.map(p => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`;
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 4500);
+
+            try {
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timer);
+                if (!resp.ok) return null;
+                const data = await resp.json();
+                if (data.code !== 'Ok' || !data.routes || !data.routes[0]) return null;
+
+                const route = data.routes[0];
+                const latLngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+                let hitsFlood = false;
+                if (obstacles && obstacles.length > 0) {
+                    for (let i = 0; i < latLngs.length - 1; i++) {
+                        if (isSegmentBlocked(latLngs[i][0], latLngs[i][1], latLngs[i+1][0], latLngs[i+1][1], obstacles)) {
+                            hitsFlood = true;
+                            break;
+                        }
+                    }
+                }
+
+                return {
+                    path: latLngs,
+                    totalKm: route.distance / 1000,
+                    durationMin: Math.max(2, Math.round(route.duration / 60)),
+                    hitsFlood
+                };
+            } catch (e) {
+                clearTimeout(timer);
+                return null;
+            }
+        }
+
+        function drawRouteOnMap(result, origin, dest, fitBoundsNow = true) {
+            if (!map || !layers.route) return;
+            layers.route.clearLayers();
+
+            if (!map.getPane('routePane')) {
+                map.createPane('routePane');
+                map.getPane('routePane').style.zIndex = 650;
+            }
+
+            L.polyline(result.path, {
+                color: '#FFFFFF',
+                weight: 11,
+                opacity: 0.92,
+                lineCap: 'round',
+                lineJoin: 'round',
+                pane: 'routePane'
+            }).addTo(layers.route);
+
+            L.polyline(result.path, {
+                color: result.blocked ? '#EA580C' : '#16A34A',
+                weight: 6.5,
+                opacity: 1,
+                lineCap: 'round',
+                lineJoin: 'round',
+                pane: 'routePane'
+            }).addTo(layers.route);
+
+            const startIcon = L.divIcon({
+                html: `<div style="background:#1B4D3E;color:white;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;white-space:nowrap;">🚩 ĐI</div>`,
+                iconSize: [0, 0], className: ''
+            });
+            const endIcon = L.divIcon({
+                html: `<div style="background:#16A34A;color:white;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;white-space:nowrap;">🏁 ĐẾN</div>`,
+                iconSize: [0, 0], className: ''
+            });
+            L.marker([origin.lat, origin.lng], { icon: startIcon }).addTo(layers.route);
+            L.marker([dest.lat, dest.lng], { icon: endIcon }).addTo(layers.route);
+
+            if (!map.hasLayer(layers.route)) {
+                layers.route.addTo(map);
+            }
+
+            const distKm = Math.max(0.2, result.totalKm).toFixed(1);
+            const driveMins = result.durationMin || Math.max(2, Math.round((result.totalKm / 18) * 60));
+            const walkMins = Math.max(4, Math.round((result.totalKm / 4.2) * 60));
+
+            const firstRoad = getMinRoadCutoff();
+            const compactVia = result.viaNames.filter((_, idx) => idx === 0 || idx === result.viaNames.length - 1 || result.viaNames[idx].includes('Cầu'));
+            const viaText = compactVia.length > 0
+                ? `<div class="text-[10.5px] text-slate-600">• Trục đi qua: ${compactVia.join(' → ')}</div>`
+                : '';
+
+            const modeBadge = result.source === 'osrm'
+                ? `<span class="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9.5px] font-extrabold">Bám đường bộ OSRM</span>`
+                : `<span class="inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[9.5px] font-extrabold">Mạng giao lộ Offline</span>`;
+
+            let statusHtml = '';
+            if (result.blocked) {
+                statusHtml = `<div class="text-orange-700 font-extrabold">⚠ Tuyến gần vùng ngập — chú ý quan sát thực địa.</div>`;
+            } else if (result.obstacleCount > 0) {
+                statusHtml = `<div class="text-emerald-700 font-extrabold">✓ Đã tự động vòng tránh ${result.obstacleCount} vùng/điểm ngập kích hoạt.</div>`;
+            } else {
+                statusHtml = `<div class="text-slate-600">• Đường thông thoáng, bám sát trục giao thông đô thị Huế.</div>`;
+            }
+
+            const houseWarn = state.houseType === '1floor'
+                ? `<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Di chuyển SỚM trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) chia cắt!</div>`
+                : `<div>• Ưu tiên trục đường cao ráo, tránh ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) khi có thể.</div>`;
+
+            document.getElementById('evacRouteDetails').innerHTML = `
+                <div class="flex items-center justify-between gap-1 flex-wrap">
+                    <span class="font-extrabold text-[#16A34A]">Quãng đường: ${distKm} km • Xe ~${driveMins}p • Bộ ~${walkMins}p</span>
+                    ${modeBadge}
+                </div>
+                ${statusHtml}
+                ${viaText}
+                ${houseWarn}
+            `;
+
+            if (fitBoundsNow) {
+                try {
+                    map.fitBounds(L.latLngBounds(result.path), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 160] });
+                } catch (e) {}
+            }
+            safeLucide();
+        }
+
+        async function showEvacRoute(forceShowCard) {
             if (!map) return;
-            // Tắt chế độ chọn điểm nếu đang bật
             if (pinSelectMode) cancelPinSelectMode();
 
-            // forceShowCard = true khi user bấm "Xem lại thẻ" → chỉ mở thẻ, không bắt buộc tính lại
-            // Khi thay đổi mực nước / kéo ghim: vẫn tính lại đường, giữ nguyên trạng thái ẩn/hiện thẻ
             if (forceShowCard === true && hasActiveRoute && !isRouteCardVisible) {
                 document.getElementById('evacRouteCard').classList.remove('hidden');
                 isRouteCardVisible = true;
@@ -2302,111 +2486,45 @@
                 return;
             }
 
-            layers.route.clearLayers();
-
+            const reqId = ++currentRouteReqId;
             const origin = getOriginCoords();
             const dest = getDestCoords();
             document.getElementById('evacShelterTitle').textContent = dest.name;
 
             const obstacles = getActiveFloodObstacles();
-            const result = findShortestSafePath(origin, dest, obstacles);
-
-            // Tạo pane riêng có z-index cao để đường đi luôn nổi trên marker & tile
-            if (!map.getPane('routePane')) {
-                map.createPane('routePane');
-                map.getPane('routePane').style.zIndex = 650; // cao hơn overlay (400) nhưng dưới popup
-            }
-
-            // Viền trắng dày phía dưới để đường nổi bật trên mọi nền bản đồ
-            L.polyline(result.path, {
-                color: '#FFFFFF',
-                weight: 12,
-                opacity: 0.9,
-                lineCap: 'round',
-                lineJoin: 'round',
-                pane: 'routePane'
-            }).addTo(layers.route);
-
-            // Đường chính màu xanh lá / cam, liền mạch, dày
-            const poly = L.polyline(result.path, {
-                color: result.blocked ? '#EA580C' : '#16A34A',
-                weight: 7,
-                opacity: 1,
-                lineCap: 'round',
-                lineJoin: 'round',
-                pane: 'routePane'
-            }).addTo(layers.route);
-
-            // Marker điểm đi & điểm đến (rõ ràng hơn)
-            const startIcon = L.divIcon({
-                html: `<div style="background:#1B4D3E;color:white;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">🚩 ĐI</div>`,
-                iconSize: [0, 0], className: ''
-            });
-            const endIcon = L.divIcon({
-                html: `<div style="background:#16A34A;color:white;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">🏁 ĐẾN</div>`,
-                iconSize: [0, 0], className: ''
-            });
-            L.marker([origin.lat, origin.lng], { icon: startIcon }).addTo(layers.route);
-            L.marker([dest.lat, dest.lng], { icon: endIcon }).addTo(layers.route);
-
-            // Đảm bảo layer route đang được gắn vào bản đồ (sau khi có thể đã bị remove khi ẩn)
-            if (map && !map.hasLayer(layers.route)) {
-                layers.route.addTo(map);
-            }
-
-            const distKm = Math.max(0.2, result.totalKm).toFixed(1);
-            const driveMins = Math.max(2, Math.round((result.totalKm / 18) * 60));
-            const walkMins = Math.max(4, Math.round((result.totalKm / 4.2) * 60));
-
-            const firstRoad = getMinRoadCutoff();
-            let viaText = '';
-            if (result.viaNames.length > 0) {
-                viaText = `<div class="text-[10.5px] text-slate-600">• Đi qua: ${result.viaNames.slice(0, 4).join(' → ')}${result.viaNames.length > 4 ? '…' : ''}</div>`;
-            }
-
-            let statusHtml = '';
-            if (result.blocked) {
-                statusHtml = `<div class="text-orange-700 font-extrabold">⚠ Không tìm được tuyến hoàn toàn tránh ngập. Đường thẳng gần nhất (cẩn thận).</div>`;
-            } else if (obstacles.length > 0) {
-                statusHtml = `<div class="text-emerald-700 font-extrabold">✓ Tuyến đã tự động né ${obstacles.length} vùng/điểm ngập đang kích hoạt.</div>`;
-            } else {
-                statusHtml = `<div class="text-slate-600">• Hiện chưa có vùng ngập kích hoạt — tuyến tối ưu theo khoảng cách.</div>`;
-            }
-
-            const houseWarn = state.houseType === '1floor'
-                ? `<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Di chuyển SỚM trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) chia cắt!</div>`
-                : `<div>• Ưu tiên trục đường cao ráo, tránh ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) khi có thể.</div>`;
-
-            document.getElementById('evacRouteDetails').innerHTML = `
-                <div class="font-extrabold text-[#16A34A]">Quãng đường: ${distKm} km • Xe ~${driveMins} phút • Bộ ~${walkMins} phút</div>
-                ${statusHtml}
-                ${viaText}
-                ${houseWarn}
-            `;
+            const offlineResult = findShortestSafePath(origin, dest, obstacles);
+            offlineResult.obstacleCount = obstacles.length;
 
             hasActiveRoute = true;
-            // Chỉ mở thẻ nếu trước đó đang hiện (hoặc lần đầu tính); giữ ẩn nếu user đã bấm Ẩn thẻ
             if (isRouteCardVisible) {
                 document.getElementById('evacRouteCard').classList.remove('hidden');
             } else {
                 document.getElementById('evacRouteCard').classList.add('hidden');
             }
-
-            // Đảm bảo đường xanh luôn nằm trên bản đồ
-            if (map && layers.route && !map.hasLayer(layers.route)) {
-                layers.route.addTo(map);
-            }
-
             updateRouteCardUI();
             updateOriginDestLabels();
             renderGisLayers();
-            try {
-                map.fitBounds(L.latLngBounds(result.path), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 160] });
-            } catch (e) {}
-            safeLucide();
+
+            drawRouteOnMap(offlineResult, origin, dest, true);
+
+            if (navigator.onLine) {
+                const osrmData = await fetchOsrmRoadGeometry(offlineResult.waypoints, obstacles);
+                if (reqId !== currentRouteReqId) return;
+
+                if (osrmData && osrmData.path && osrmData.path.length > 1) {
+                    const hybridResult = {
+                        ...offlineResult,
+                        path: osrmData.path,
+                        totalKm: osrmData.totalKm,
+                        durationMin: osrmData.durationMin,
+                        blocked: offlineResult.blocked || osrmData.hitsFlood,
+                        source: 'osrm'
+                    };
+                    drawRouteOnMap(hybridResult, origin, dest, false);
+                }
+            }
         }
 
-        // Cập nhật nút "Ẩn thẻ" / "Xem lại thẻ"
         function updateRouteCardUI() {
             const bottomBtn = document.getElementById('btnBottomToggleRoute');
             const showBtn = document.getElementById('btnShowEvacRoute');
@@ -2424,15 +2542,15 @@
                     showBtn.textContent = 'Xem lại thẻ';
                     showBtn.classList.remove('hidden');
                 } else if (hasActiveRoute && isRouteCardVisible) {
-                    showBtn.textContent = 'Chỉ đường sơ tán';
+                    showBtn.classList.add('hidden');
                 } else {
                     showBtn.textContent = 'Chỉ đường sơ tán';
+                    showBtn.classList.remove('hidden');
                 }
             }
             safeLucide();
         }
 
-        // Ẩn thẻ thông tin — GIỮ NGUYÊN đường xanh trên bản đồ (như Google Maps)
         function hideRouteCard() {
             if (!hasActiveRoute) return;
             document.getElementById('evacRouteCard').classList.add('hidden');
@@ -2445,7 +2563,6 @@
             );
         }
 
-        // Xóa hoàn toàn lộ trình (đường + thẻ)
         function clearEvacRoute() {
             if (layers.route) layers.route.clearLayers();
             document.getElementById('evacRouteCard').classList.add('hidden');
@@ -2456,7 +2573,7 @@
         }
 
         // =====================================================================
-        // 4. QUẢN LÝ ĐIỂM CHIA CẮT / TRÀN ĐƯỜNG THEO KHU VỰC (MỚI TÍCH HỢP)
+        // QUẢN LÝ ĐIỂM CHIA CẮT / TRÀN ĐƯỜNG THEO KHU VỰC
         // =====================================================================
         function applyRoadAreaPreset(areaKey) {
             if (areaKey === 'custom') {
@@ -2470,8 +2587,8 @@
             if (!preset) return;
             state.roadAreaKey = areaKey;
             state.roadCutoffs = JSON.parse(JSON.stringify(preset.roads));
-            if (preset.stationId && preset.stationId !== state.stationId) {
-                state.stationId = preset.stationId;
+            if (preset.stationId) {
+                state.simStationId = preset.stationId;
             }
             persistState();
             refreshAllViews();
@@ -2512,12 +2629,18 @@
                 return;
             }
 
+            const center = map ? map.getCenter() : { lat: state.lat, lng: state.lng };
+
             if (!Array.isArray(state.roadCutoffs)) state.roadCutoffs = [];
+            const refSt = getActiveStation();
             state.roadCutoffs.push({
                 id: 'rc_' + Date.now(),
+                stationId: refSt.id,
                 trigger: +Math.min(6.00, Math.max(0.10, trigger)).toFixed(2),
                 title,
-                detail: detail || `Đường bắt đầu ngập tràn khi trạm đo đạt từ ${trigger.toFixed(2)}m.`
+                detail: detail || `Đường bắt đầu ngập tràn khi ${refSt.name} đạt từ ${trigger.toFixed(2)}m.`,
+                lat: +center.lat.toFixed(6),
+                lng: +center.lng.toFixed(6)
             });
             state.roadCutoffs.sort((a, b) => a.trigger - b.trigger);
             state.roadAreaKey = 'custom';
@@ -2527,7 +2650,19 @@
             closeRoadCutoffModal();
             persistState();
             refreshAllViews();
+            if (hasActiveRoute) showEvacRoute();
             showPushBanner('Đã thêm điểm chia cắt đường', `${title} (Từ ${trigger.toFixed(2)}m)`, '#1B4D3E');
+        }
+
+        function focusRoadOnMap(lat, lng, title) {
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            switchTab('map');
+            setTimeout(() => {
+                if (map) {
+                    map.setView([lat, lng], 16);
+                    showPushBanner('Vị trí điểm tràn đường', title, '#EA580C');
+                }
+            }, 180);
         }
 
         function removeRoadCutoff(id) {
@@ -2538,7 +2673,7 @@
         }
 
         // =====================================================================
-        // 5. ĐỒNG BỘ GIAO DIỆN 5 TAB (1 SƠ ĐỒ DUY NHẤT + KẾ HOẠCH ĐƯỜNG)
+        // ĐỒNG BỘ GIAO DIỆN 5 TAB
         // =====================================================================
         function toggleHouseTypeQuick() {
             state.houseType = state.houseType === '1floor' ? '2floor' : '1floor';
@@ -2584,11 +2719,15 @@
 
         function refreshAllViews() {
             const st = getActiveStation();
-            const stLvl = getStationLevel(st);
+            const simSt = getSimStation();
+            const simStLvl = getStationLevel(simSt);
             const flood = evaluateHouseholdFlood();
+            const stLvl = flood.effectiveLvl;
+            const stSpeed = flood.effectiveSpeed;
             const is1Floor = state.houseType === '1floor';
+            const isRealtime = state.dataSourceMode === 'realtime';
 
-            document.getElementById('headerLiveMeta').textContent = `${st.name.replace('Trạm ', '')}: ${stLvl.toFixed(2)}m • Hue-S 30p/lần`;
+            document.getElementById('headerLiveMeta').textContent = `${st.name.replace('Trạm ', '')}: ${stLvl.toFixed(2)}m • ${isRealtime ? 'API Hue-S 30p/lần' : 'Chế độ mô phỏng'}`;
 
             document.getElementById('heroStatusCard').style.borderTopColor = flood.color;
             document.getElementById('heroOwnerName').textContent = `Hộ ${state.ownerName}`;
@@ -2598,7 +2737,7 @@
                 ? 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-700'
                 : 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#EBF3F0] text-[#1B4D3E]';
 
-            document.getElementById('heroSpeedTag').textContent = `${state.risingSpeedCmHr > 0 ? '+' : ''}${state.risingSpeedCmHr} cm/h`;
+            document.getElementById('heroSpeedTag').textContent = `${stSpeed > 0 ? '+' : ''}${stSpeed} cm/h`;
             document.getElementById('heroAddress').textContent = state.address;
 
             document.getElementById('heroAlertBox').className = `p-3.5 rounded-2xl border space-y-1.5 ${flood.boxClass}`;
@@ -2669,17 +2808,19 @@
             document.getElementById('svgWaterPill').setAttribute('y', tagY);
             document.getElementById('svgWaterPill').setAttribute('fill', flood.color);
             document.getElementById('svgWaterPillText').setAttribute('y', tagY + 11);
-            document.getElementById('svgWaterPillText').textContent = `Trạm: ${stLvl.toFixed(2)}m`;
+            document.getElementById('svgWaterPillText').textContent = `${st.name.replace('Trạm ', '')}: ${stLvl.toFixed(2)}m`;
 
-            // Dynamic Evacuation & Road Cut-off Plan Card
+            // Kế hoạch di chuyển & chia cắt đường
             document.getElementById('evacPlanModeSub').textContent = is1Floor
                 ? 'Chế độ: Nhà 1 tầng (Cảnh báo di chuyển sớm trước khi ngập đường)'
                 : 'Chế độ: Nhà 2 tầng (Dời xe sớm, kê đồ & rút lên tầng 2 khi đường ngập)';
-            document.getElementById('roadStationRefBadge').textContent = `So với ${st.name}`;
+            const presetObj = AREA_ROAD_PRESETS[state.roadAreaKey];
+            const areaRefSt = presetObj ? (HYDRO_STATIONS.find(s => s.id === presetObj.stationId) || st) : st;
+            document.getElementById('roadStationRefBadge').textContent = `Theo ${areaRefSt.river} (${areaRefSt.name.replace('Trạm ', '')})`;
             document.getElementById('roadAreaSelect').value = state.roadAreaKey || 'noido';
 
             const roads = Array.isArray(state.roadCutoffs) ? state.roadCutoffs : [];
-            const activeCutRoads = roads.filter(r => stLvl >= r.trigger);
+            const activeCutRoads = roads.filter(r => getRoadEffectiveLevel(r) >= r.trigger);
 
             document.getElementById('earlyEvac1FloorBox').classList.toggle('hidden', !flood.needEarly1FloorEvac);
             if (flood.needEarly1FloorEvac) {
@@ -2704,21 +2845,31 @@
                 `;
             } else {
                 document.getElementById('roadCutoffList').innerHTML = roads.map(m => {
-                    const isCut = stLvl >= m.trigger;
-                    const diffCm = Math.round((m.trigger - stLvl) * 100);
+                    const roadLvl = getRoadEffectiveLevel(m);
+                    const isCut = roadLvl >= m.trigger;
+                    const diffCm = Math.round((m.trigger - roadLvl) * 100);
+                    const hasCoords = Number.isFinite(+m.lat) && Number.isFinite(+m.lng);
+                    const safeTitle = escapeHTML(m.title);
+                    const safeDetail = escapeHTML(m.detail);
+                    const safeId = escapeHTML(m.id);
                     return `
                         <div class="p-2.5 rounded-xl border flex items-start justify-between gap-2 ${isCut ? 'bg-red-50/90 border-red-200' : 'bg-[#F4F7F6] border-slate-200/70'}">
                             <div class="min-w-0">
-                                <div class="font-extrabold ${isCut ? 'text-red-700' : 'text-slate-800'}">${m.title}</div>
+                                <div class="font-extrabold ${isCut ? 'text-red-700' : 'text-slate-800'}">${safeTitle}</div>
                                 <div class="text-[10.5px] ${isCut ? 'text-red-600 font-semibold' : 'text-slate-500'} mt-0.5">
-                                    ${isCut ? `ĐÃ NGẬP TRÀN (+${Math.abs(diffCm)}cm) • ` : `Còn cách ${diffCm}cm • `}${m.detail}
+                                    ${isCut ? `ĐÃ NGẬP TRÀN (+${Math.abs(diffCm)}cm) • ` : `Còn cách ${diffCm}cm • `}${safeDetail}
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 flex-shrink-0">
+                                ${hasCoords ? `
+                                    <button onclick="focusRoadOnMap(${+m.lat}, ${+m.lng}, '${safeTitle.replace(/'/g, "\'")}')" class="p-1 rounded-lg bg-white border border-slate-200 text-[#1B4D3E] hover:bg-[#EBF3F0]" title="Xem vị trí trên bản đồ">
+                                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                ` : ''}
                                 <span class="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold font-mono-num ${isCut ? 'bg-red-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}">
                                     ${isCut ? 'ĐÃ CHIA CẮT' : `Từ ${m.trigger.toFixed(2)}m`}
                                 </span>
-                                <button onclick="removeRoadCutoff('${m.id}')" class="p-1 rounded-lg text-slate-400 hover:text-red-600" title="Xóa điểm này">
+                                <button onclick="removeRoadCutoff('${safeId}')" class="p-1 rounded-lg text-slate-400 hover:text-red-600" title="Xóa điểm này">
                                     <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
@@ -2727,26 +2878,65 @@
                 }).join('');
             }
 
+            // Cập nhật UI 2 Kịch bản (Mô phỏng vs API Hue-S Thời gian thực)
+            const btnSim = document.getElementById('btnModeSim');
+            const btnLive = document.getElementById('btnModeLive');
+            const simBox = document.getElementById('simulationControlBox');
+            const liveBox = document.getElementById('realtimeApiControlBox');
+
+            if (isRealtime) {
+                btnLive.className = 'py-1.5 px-2 rounded-xl text-[11px] font-extrabold bg-white text-[#1B4D3E] shadow-2xs flex items-center justify-center gap-1 transition';
+                btnSim.className = 'py-1.5 px-2 rounded-xl text-[11px] font-bold text-slate-600 flex items-center justify-center gap-1 transition';
+                simBox.classList.add('hidden');
+                liveBox.classList.remove('hidden');
+                const apiInput = document.getElementById('hueSApiUrlInput');
+                if (apiInput && document.activeElement !== apiInput) {
+                    apiInput.value = state.hueSApiUrl || DEFAULT_HUES_API_URL;
+                }
+            } else {
+                btnSim.className = 'py-1.5 px-2 rounded-xl text-[11px] font-extrabold bg-white text-[#1B4D3E] shadow-2xs flex items-center justify-center gap-1 transition';
+                btnLive.className = 'py-1.5 px-2 rounded-xl text-[11px] font-bold text-slate-600 flex items-center justify-center gap-1 transition';
+                simBox.classList.remove('hidden');
+                liveBox.classList.add('hidden');
+            }
+
+            // 4 thẻ trạm quan trắc độc lập (chạm để chọn trạm mô phỏng, không làm đổi lưu vực của ngôi nhà)
             document.getElementById('stationsGrid').innerHTML = HYDRO_STATIONS.map(station => {
                 const lvl = getStationLevel(station);
-                const selected = station.id === state.stationId;
+                const spd = getStationSpeed(station);
+                const selected = station.id === simSt.id;
+                const isHouseSt = station.id === state.stationId;
                 const tier = getOfficialAlertTier(station, lvl);
                 return `
                     <button onclick="selectReferenceStation('${station.id}')" class="p-2.5 rounded-2xl text-left border transition ${selected ? 'bg-[#EBF3F0] border-[#1B4D3E] shadow-2xs' : 'bg-[#F4F7F6] border-transparent hover:border-slate-200'}">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="text-[11px] font-extrabold ${selected ? 'text-[#1B4D3E]' : 'text-slate-800'} truncate">${station.name}</span>
+                            <span class="text-[11px] font-extrabold ${selected ? 'text-[#1B4D3E]' : 'text-slate-800'} truncate">${station.name}${isHouseSt ? ' • Nhà' : ''}</span>
                             <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold text-white" style="background-color: ${tier.color};">${tier.code}</span>
                         </div>
                         <div class="flex items-baseline justify-between mt-1">
                             <span class="text-[15px] font-extrabold font-mono-num text-slate-900">${lvl.toFixed(2)}m</span>
-                            <span class="text-[10px] font-semibold text-slate-500">${station.river}</span>
+                            <span class="text-[10px] font-semibold text-slate-500">${station.river}${spd !== 0 ? ` (${spd > 0 ? '+' : ''}${spd})` : ''}</span>
                         </div>
                     </button>
                 `;
             }).join('');
 
-            document.getElementById('sliderKimLongReadout').textContent = `${state.kimLongLevel.toFixed(2)} m`;
-            document.getElementById('waterLevelSlider').value = state.kimLongLevel.toFixed(2);
+            // Thanh trượt điều khiển riêng trạm đang chọn mô phỏng
+            document.getElementById('sliderStationPrompt').textContent = `Kéo thử ${simSt.name}:`;
+            document.getElementById('sliderActiveStationReadout').textContent = `${simStLvl.toFixed(2)} m`;
+            document.getElementById('waterLevelSlider').value = simStLvl.toFixed(2);
+
+            // Nút Tăng dần / Giảm dần tự động
+            const btnRise = document.getElementById('btnSimRise');
+            const btnFall = document.getElementById('btnSimFall');
+            if (btnRise && btnFall) {
+                btnRise.className = simTrendMode === 'rise'
+                    ? 'px-2 py-1 rounded-lg bg-orange-600 text-white text-[10px] font-extrabold flex items-center gap-1'
+                    : 'px-2 py-1 rounded-lg bg-white hover:bg-orange-50 border border-slate-200 text-[10px] font-extrabold text-orange-700 flex items-center gap-1';
+                btnFall.className = simTrendMode === 'fall'
+                    ? 'px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-extrabold flex items-center gap-1'
+                    : 'px-2 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 text-[10px] font-extrabold text-emerald-700 flex items-center gap-1';
+            }
 
             renderActionChecklist(flood, st);
 
@@ -2774,8 +2964,8 @@
 
         function getSmsContentString() {
             const st = getActiveStation();
-            const stLvl = getStationLevel(st);
             const flood = evaluateHouseholdFlood();
+            const stLvl = flood.effectiveLvl;
             const prefix = state.houseType === '1floor'
                 ? '[NHÀ 1 TẦNG - CẦN SƠ TÁN SỚM]'
                 : '[NHÀ 2 TẦNG - RÚT LÊN TẦNG 2]';
@@ -2854,8 +3044,7 @@
         function toggleActionTask(taskId) {
             state.completedTasks[taskId] = !state.completedTasks[taskId];
             persistState();
-            const st = getActiveStation();
-            renderActionChecklist(evaluateHouseholdFlood(), st);
+            renderActionChecklist(evaluateHouseholdFlood(), getActiveStation());
             safeLucide();
         }
 
@@ -2881,8 +3070,8 @@
                     <div class="py-2.5 flex items-center justify-between gap-2">
                         <div class="min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-extrabold text-slate-900">${m.name}</span>
-                                <span class="px-1.5 py-0.5 rounded-md bg-[#F4F7F6] text-[10px] font-bold text-[#1B4D3E]">${m.role}</span>
+                                <span class="text-xs font-extrabold text-slate-900">${escapeHTML(m.name)}</span>
+                                <span class="px-1.5 py-0.5 rounded-md bg-[#F4F7F6] text-[10px] font-bold text-[#1B4D3E]">${escapeHTML(m.role)}</span>
                             </div>
                             <div class="text-[10.5px] text-slate-500 mt-0.5">${rateSummary}</div>
                         </div>
@@ -2940,7 +3129,7 @@
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-xs font-extrabold text-slate-900 truncate">${sup.name}</span>
+                                    <span class="text-xs font-extrabold text-slate-900 truncate">${escapeHTML(sup.name)}</span>
                                     ${sup.custom ? `
                                         <button onclick="removeSupply('${sup.id}')" class="text-slate-400 hover:text-red-600" title="Xóa mục này">
                                             <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
@@ -2948,7 +3137,7 @@
                                     ` : ''}
                                 </div>
                                 <div class="text-[10.5px] text-slate-500 mt-0.5">
-                                    Dùng: <span class="font-mono-num font-bold text-slate-700">${dailyUsage.toFixed(1)} ${sup.unit}/ngày</span> • Mục tiêu ${targetDays} ngày: <span class="font-mono-num font-bold text-slate-700">${targetNeeded} ${sup.unit}</span>
+                                    Dùng: <span class="font-mono-num font-bold text-slate-700">${dailyUsage.toFixed(1)} ${escapeHTML(sup.unit)}/ngày</span> • Mục tiêu ${targetDays} ngày: <span class="font-mono-num font-bold text-slate-700">${targetNeeded} ${escapeHTML(sup.unit)}</span>
                                 </div>
                             </div>
                             <span class="px-2 py-0.5 rounded-full text-[10.5px] font-extrabold font-mono-num border flex-shrink-0 ${badgeClass}">
@@ -2962,7 +3151,7 @@
                                 <button onclick="adjustSupplyStock('${sup.id}', -${sup.step || 1})" class="w-7 h-7 rounded-lg bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] font-extrabold flex items-center justify-center active:scale-95">−</button>
                                 <input type="number" step="0.5" min="0" value="${currentStock}" onchange="setSupplyStock('${sup.id}', this.value)" class="w-16 py-1 px-1.5 rounded-lg bg-[#F4F7F6] border border-slate-200 text-center text-xs font-extrabold font-mono-num text-[#1B4D3E]">
                                 <button onclick="adjustSupplyStock('${sup.id}', ${sup.step || 1})" class="w-7 h-7 rounded-lg bg-[#1B4D3E] hover:bg-[#13382D] text-white font-extrabold flex items-center justify-center active:scale-95">+</button>
-                                <span class="text-[11px] font-bold text-slate-600 min-w-[42px]">${sup.unit}</span>
+                                <span class="text-[11px] font-bold text-slate-600 min-w-[42px]">${escapeHTML(sup.unit)}</span>
                             </div>
                         </div>
 
@@ -2973,7 +3162,7 @@
                             <div class="flex items-center justify-between text-[10.5px] font-bold">
                                 <span class="text-slate-500">Đạt ${pct}% mục tiêu</span>
                                 <span style="color: ${barColor};">
-                                    ${isShort ? `Còn thiếu ${diffAmount} ${sup.unit}` : `Đạt chuẩn (Dư +${Math.abs(diffAmount)} ${sup.unit})`}
+                                    ${isShort ? `Còn thiếu ${diffAmount} ${escapeHTML(sup.unit)}` : `Đạt chuẩn (Dư +${Math.abs(diffAmount)} ${escapeHTML(sup.unit)})`}
                                 </span>
                             </div>
                         </div>
@@ -3002,7 +3191,7 @@
                     ? 'text-[11px] font-extrabold text-red-700 bg-red-50 px-2.5 py-1 rounded-full'
                     : 'text-[11px] font-extrabold text-orange-800 bg-orange-50 px-2.5 py-1 rounded-full';
                 goalBadge.textContent = `Thiếu ${(targetDays - safeMinDays).toFixed(1)} ngày so với mục tiêu`;
-                limitingNote.innerHTML = `Hết sớm nhất: <strong>${limitingItemName}</strong> (chỉ đủ dùng <strong>${safeMinDays.toFixed(1)} ngày</strong> cho ${state.members.length} người).`;
+                limitingNote.innerHTML = `Hết sớm nhất: <strong>${escapeHTML(limitingItemName)}</strong> (chỉ đủ dùng <strong>${safeMinDays.toFixed(1)} ngày</strong> cho ${state.members.length} người).`;
             }
 
             const readyCount = state.kitItems.filter(i => i.checked).length;
@@ -3012,7 +3201,7 @@
                     <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition ${item.checked ? 'bg-[#1B4D3E] text-white' : 'border-2 border-slate-300 bg-white'}">
                         ${item.checked ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}
                     </span>
-                    <span class="text-xs font-semibold transition ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}">${item.name}</span>
+                    <span class="text-xs font-semibold transition ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}">${escapeHTML(item.name)}</span>
                 </div>
             `).join('');
 
@@ -3022,7 +3211,7 @@
         }
 
         // =====================================================================
-        // 6. ĐIỀU HƯỚNG TAB, MÔ PHỎNG MỰC NƯỚC, CÒI BÁO ĐỘNG & CÁC MODAL
+        // ĐIỀU HƯỚNG TAB & 2 KỊCH BẢN (1: MÔ PHỎNG ĐỘC LẬP | 2: API HUE-S THỰC TẾ)
         // =====================================================================
         function switchTab(tabName) {
             document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
@@ -3045,31 +3234,63 @@
             }
         }
 
+        function setDataSourceMode(mode) {
+            state.dataSourceMode = mode === 'realtime' ? 'realtime' : 'simulation';
+            stopSimAutoTrend();
+            persistState();
+            refreshAllViews();
+
+            if (state.dataSourceMode === 'realtime') {
+                startRealtimePolling();
+                fetchHueSRealtimeNow(true);
+            } else {
+                stopRealtimePolling();
+                document.getElementById('lastSyncTimestamp').textContent = 'Chế độ mô phỏng độc lập từng trạm';
+                showPushBanner('Kịch bản 1: Mô phỏng độc lập', 'Chạm vào từng trạm để điều chỉnh mực nước riêng biệt.', '#1B4D3E');
+            }
+        }
+
         function selectReferenceStation(stId) {
-            state.stationId = stId;
+            state.simStationId = stId;
             persistState();
             refreshAllViews();
         }
 
         function stepWaterLevel(delta) {
-            stopAutoSync();
-            const next = +Math.min(6.00, Math.max(0.00, state.kimLongLevel + delta)).toFixed(2);
+            stopSimAutoTrend();
+            const simSt = getSimStation();
+            const cur = getStationLevel(simSt.id);
+            const next = +Math.min(6.00, Math.max(0.00, cur + delta)).toFixed(2);
             onSliderWaterInput(next);
         }
 
         function onSliderWaterInput(val) {
+            if (state.dataSourceMode !== 'simulation') {
+                state.dataSourceMode = 'simulation';
+                stopRealtimePolling();
+            }
+            const simSt = getSimStation();
+            const stId = simSt.id;
+            const prevLvl = getStationLevel(stId);
             const next = +Math.min(6.00, Math.max(0.00, parseFloat(val))).toFixed(2);
             const prevFlood = evaluateHouseholdFlood().key;
-            state.kimLongLevel = next;
-            if (next === 0) state.risingSpeedCmHr = 0;
+
+            state.stationLevels[stId] = next;
+            if (next === 0) {
+                state.stationSpeeds[stId] = 0;
+            } else if (next > prevLvl) {
+                state.stationSpeeds[stId] = Math.max(4, state.stationSpeeds[stId] || 8);
+            } else if (next < prevLvl) {
+                state.stationSpeeds[stId] = -Math.max(4, Math.abs(state.stationSpeeds[stId] || 8));
+            }
+
             persistState();
             refreshAllViews();
-            // Cập nhật lại lộ trình nếu đang có đường xanh (kể cả khi đã Ẩn thẻ)
             if (hasActiveRoute) {
                 showEvacRoute();
             }
-            const nextFlood = evaluateHouseholdFlood().key;
 
+            const nextFlood = evaluateHouseholdFlood().key;
             const shouldAlarm = state.houseType === '1floor'
                 ? (nextFlood === 'yard' || nextFlood === 'doorstep' || nextFlood === 'flooded')
                 : (nextFlood === 'doorstep' || nextFlood === 'flooded');
@@ -3079,15 +3300,16 @@
             }
         }
 
-        function applyWaterPreset(lvl, speedCmHr) {
-            stopAutoSync();
-            state.kimLongLevel = +Math.min(6.00, Math.max(0.00, lvl)).toFixed(2);
-            state.risingSpeedCmHr = speedCmHr;
+        function applyActiveStationPreset(lvl, speedCmHr) {
+            stopSimAutoTrend();
+            const simSt = getSimStation();
+            const stId = simSt.id;
+            state.stationLevels[stId] = +Math.min(6.00, Math.max(0.00, lvl)).toFixed(2);
+            state.stationSpeeds[stId] = speedCmHr;
             persistState();
             refreshAllViews();
-            if (hasActiveRoute) {
-                showEvacRoute();
-            }
+            if (hasActiveRoute) showEvacRoute();
+
             const flood = evaluateHouseholdFlood();
             const shouldAlarm = state.houseType === '1floor'
                 ? (flood.key === 'yard' || flood.key === 'doorstep' || flood.key === 'flooded')
@@ -3095,36 +3317,195 @@
 
             if (state.autoAlert && shouldAlarm) {
                 triggerEmergencyAlert(false);
-            } else if (lvl === 0) {
-                showPushBanner('Đã đặt tất cả trạm về 0.00m', 'Trạng thái bình thường - An toàn tại tất cả trạm đo.', '#16A34A');
-            }
-        }
-
-        function toggleAutoSync() {
-            if (autoSyncTimer) {
-                stopAutoSync();
             } else {
-                if (state.risingSpeedCmHr === 0) state.risingSpeedCmHr = 12;
-                document.getElementById('autoSyncLabel').textContent = 'Đang chạy...';
-                autoSyncTimer = setInterval(() => {
-                    if (state.kimLongLevel >= 5.81) state.risingSpeedCmHr = -12;
-                    else if (state.kimLongLevel <= 0.00) state.risingSpeedCmHr = 12;
-                    const deltaM = +(state.risingSpeedCmHr / 100).toFixed(2);
-                    state.kimLongLevel = +Math.min(6.00, Math.max(0.00, state.kimLongLevel + deltaM)).toFixed(2);
-                    const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                    document.getElementById('lastSyncTimestamp').textContent = `Đồng bộ Hue-S lúc ${nowStr} (30p/lần)`;
-                    persistState();
-                    refreshAllViews();
-                }, 2200);
+                showPushBanner(`Mô phỏng ${simSt.name}: ${lvl.toFixed(2)}m`, 'Các lưu vực khác vẫn giữ nguyên độc lập.', '#1B4D3E');
             }
         }
 
-        function stopAutoSync() {
+        function resetAllStationsZero() {
+            stopSimAutoTrend();
+            HYDRO_STATIONS.forEach(s => {
+                state.stationLevels[s.id] = 0.00;
+                state.stationSpeeds[s.id] = 0;
+            });
+            persistState();
+            refreshAllViews();
+            if (hasActiveRoute) showEvacRoute();
+            showPushBanner('Đã đặt tất cả 4 trạm về 0.00m', 'Toàn bộ lưu vực Sông Hương, Sông Bồ, Sông Ô Lâu ở mức an toàn.', '#16A34A');
+        }
+
+        function applyPhuOc2025Preset() {
+            stopSimAutoTrend();
+            state.simStationId = 'phuoc';
+            state.stationLevels.phuoc = 5.31;
+            state.stationSpeeds.phuoc = 16;
+            persistState();
+            refreshAllViews();
+            if (hasActiveRoute) showEvacRoute();
+            showPushBanner(
+                'Mô phỏng lũ Phú Ốc 03/11/2025 (5.31m)',
+                'Chỉ ngập hạ du Sông Bồ; nội đô Huế (Đập Đá, Kim Long) không bị chia cắt nếu Sông Hương chưa dâng.',
+                '#DC2626'
+            );
+        }
+
+        // Chạy mô phỏng tăng dần / giảm dần độc lập cho trạm đang chọn
+        function toggleSimAutoTrend(direction) {
+            if (simTrendMode === direction) {
+                stopSimAutoTrend();
+                refreshAllViews();
+                return;
+            }
+            stopSimAutoTrend();
+            simTrendMode = direction;
+            const stId = getSimStation().id;
+            state.stationSpeeds[stId] = direction === 'rise' ? 12 : -12;
+            refreshAllViews();
+
+            autoSyncTimer = setInterval(() => {
+                const curStId = getSimStation().id;
+                const curVal = getStationLevel(curStId);
+                if (simTrendMode === 'rise') {
+                    if (curVal >= 5.81) {
+                        stopSimAutoTrend();
+                        refreshAllViews();
+                        return;
+                    }
+                    state.stationLevels[curStId] = +Math.min(6.00, curVal + 0.08).toFixed(2);
+                    state.stationSpeeds[curStId] = 12;
+                } else if (simTrendMode === 'fall') {
+                    if (curVal <= 0.00) {
+                        state.stationLevels[curStId] = 0.00;
+                        state.stationSpeeds[curStId] = 0;
+                        stopSimAutoTrend();
+                        refreshAllViews();
+                        return;
+                    }
+                    state.stationLevels[curStId] = +Math.max(0.00, curVal - 0.08).toFixed(2);
+                    state.stationSpeeds[curStId] = -12;
+                }
+                const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                document.getElementById('lastSyncTimestamp').textContent = `Mô phỏng ${simTrendMode === 'rise' ? 'nước dâng' : 'nước rút'} lúc ${nowStr}`;
+                persistState();
+                refreshAllViews();
+                if (hasActiveRoute) showEvacRoute();
+            }, 1500);
+        }
+
+        function stopSimAutoTrend() {
+            simTrendMode = null;
             if (autoSyncTimer) {
                 clearInterval(autoSyncTimer);
                 autoSyncTimer = null;
             }
-            document.getElementById('autoSyncLabel').textContent = '30p/lần';
+        }
+
+        // Kịch bản 2: Cập nhật thời gian thực qua API Hue-S (30 phút/lần)
+        function saveHueSApiUrl() {
+            const input = document.getElementById('hueSApiUrlInput');
+            if (!input) return;
+            const url = input.value.trim() || DEFAULT_HUES_API_URL;
+            state.hueSApiUrl = url;
+            persistState();
+            showPushBanner('Đã lưu link API Hue-S', url, '#1B4D3E');
+            if (state.dataSourceMode === 'realtime') {
+                fetchHueSRealtimeNow(true);
+            }
+        }
+
+        function startRealtimePolling() {
+            stopRealtimePolling();
+            // Tự động gọi lại sau mỗi 30 phút (1.800.000 ms)
+            realtimePollTimer = setInterval(() => {
+                if (state.dataSourceMode === 'realtime') {
+                    fetchHueSRealtimeNow(false);
+                }
+            }, 30 * 60 * 1000);
+        }
+
+        function stopRealtimePolling() {
+            if (realtimePollTimer) {
+                clearInterval(realtimePollTimer);
+                realtimePollTimer = null;
+            }
+        }
+
+        async function fetchHueSRealtimeNow(showToast = false) {
+            const apiUrl = (state.hueSApiUrl || DEFAULT_HUES_API_URL).trim();
+            const statusEl = document.getElementById('liveApiStatusText');
+            const badgeEl = document.getElementById('liveApiHttpBadge');
+            if (statusEl) statusEl.textContent = 'Đang kết nối cổng dữ liệu quan trắc Hue-S...';
+            if (badgeEl) badgeEl.textContent = 'Đang tải...';
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 5000);
+
+            try {
+                const resp = await fetch(apiUrl, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+                clearTimeout(timer);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const payload = await resp.json();
+
+                // Chuẩn hóa dữ liệu JSON trả về từ Hue-S (hỗ trợ cả dạng mảng stations hoặc object key-value)
+                const list = Array.isArray(payload) ? payload : (payload.data || payload.stations || []);
+                let updatedCount = 0;
+
+                const mapNameToId = (rawName) => {
+                    const s = String(rawName || '').toLowerCase();
+                    if (s.includes('kim long') || s.includes('kimlong')) return 'kimlong';
+                    if (s.includes('phú ốc') || s.includes('phu oc') || s.includes('phuoc')) return 'phuoc';
+                    if (s.includes('dã viên') || s.includes('da vien') || s.includes('davien')) return 'davien';
+                    if (s.includes('phong bình') || s.includes('phong binh') || s.includes('phongbinh')) return 'phongbinh';
+                    return null;
+                };
+
+                if (Array.isArray(list)) {
+                    list.forEach(item => {
+                        const id = mapNameToId(item.id || item.stationId || item.name || item.ten_tram);
+                        const val = parseFloat(item.level ?? item.waterLevel ?? item.muc_nuoc ?? item.value);
+                        if (id && Number.isFinite(val)) {
+                            const prev = getStationLevel(id);
+                            state.stationLevels[id] = +Math.max(0, val).toFixed(2);
+                            state.stationSpeeds[id] = Math.round((state.stationLevels[id] - prev) * 100);
+                            updatedCount++;
+                        }
+                    });
+                } else if (payload && typeof payload === 'object') {
+                    ['kimlong', 'phuoc', 'davien', 'phongbinh'].forEach(id => {
+                        if (payload[id] != null && Number.isFinite(parseFloat(payload[id]))) {
+                            const prev = getStationLevel(id);
+                            state.stationLevels[id] = +Math.max(0, parseFloat(payload[id])).toFixed(2);
+                            state.stationSpeeds[id] = Math.round((state.stationLevels[id] - prev) * 100);
+                            updatedCount++;
+                        }
+                    });
+                }
+
+                if (updatedCount === 0) throw new Error('Không tìm thấy trường mực nước hợp lệ');
+
+                const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('lastSyncTimestamp').textContent = `Đồng bộ API Hue-S lúc ${nowStr} (30p/lần)`;
+                if (badgeEl) badgeEl.textContent = `Live • ${nowStr}`;
+                if (statusEl) statusEl.textContent = `Đã cập nhật độc lập ${updatedCount}/4 trạm từ API Hue-S lúc ${nowStr}.`;
+
+                persistState();
+                refreshAllViews();
+                if (hasActiveRoute) showEvacRoute();
+                if (showToast) {
+                    showPushBanner('Đồng bộ API Hue-S thành công', `Cập nhật số liệu độc lập ${updatedCount}/4 trạm lúc ${nowStr}.`, '#16A34A');
+                }
+            } catch (err) {
+                clearTimeout(timer);
+                const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                if (badgeEl) badgeEl.textContent = 'Chờ phản hồi API';
+                if (statusEl) {
+                    statusEl.innerHTML = `Không thể đọc trực tiếp từ endpoint do CORS hoặc mạng (${escapeHTML(err.message)}). Đang giữ số liệu trạm gần nhất lúc ${nowStr}.`;
+                }
+                document.getElementById('lastSyncTimestamp').textContent = `API Hue-S • Thử lại sau 30p (${nowStr})`;
+                if (showToast) {
+                    showPushBanner('Chưa kết nối được API Hue-S', 'Kiểm tra lại link API mở hoặc CORS; dữ liệu trạm hiện tại được giữ nguyên.', '#EA580C');
+                }
+            }
         }
 
         let sharedAudioCtx = null;
@@ -3190,7 +3571,6 @@
             document.getElementById('iosPushBanner').classList.add('hidden');
         }
 
-        // Settings Form Handlers
         function autoSyncYardInput(floorVal) {
             const fl = parseFloat(floorVal);
             if (!isNaN(fl) && fl > 0.5) {
@@ -3218,6 +3598,17 @@
             state.familyPhone = document.getElementById('cfgFamilyPhone').value.trim();
             state.address = document.getElementById('cfgAddress').value.trim();
             state.stationId = document.getElementById('cfgStationId').value;
+            state.simStationId = state.stationId;
+            if (state.stationId === 'phuoc' && state.roadAreaKey !== 'songbo' && state.roadAreaKey !== 'custom') {
+                state.roadAreaKey = 'songbo';
+                state.roadCutoffs = JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.songbo.roads));
+            } else if (state.stationId === 'phongbinh' && state.roadAreaKey !== 'songolau' && state.roadAreaKey !== 'custom') {
+                state.roadAreaKey = 'songolau';
+                state.roadCutoffs = JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.songolau.roads));
+            } else if ((state.stationId === 'kimlong' || state.stationId === 'davien') && (state.roadAreaKey === 'songbo' || state.roadAreaKey === 'songolau')) {
+                state.roadAreaKey = 'noido';
+                state.roadCutoffs = JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads));
+            }
             state.floorLevel = parseFloat(document.getElementById('cfgFloorLevel').value);
             state.yardLevel = parseFloat(document.getElementById('cfgYardLevel').value);
             state.autoAlert = document.getElementById('cfgAutoAlert').checked;
@@ -3228,11 +3619,11 @@
             showPushBanner('Đã lưu thiết lập hộ gia đình', `${label} • Ngưỡng cảnh báo đã cập nhật.`, '#16A34A');
         }
 
-        // Reset Modal
         function openResetModal() { document.getElementById('resetModal').classList.remove('hidden'); safeLucide(); }
         function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
         function confirmResetApp() {
-            stopAutoSync();
+            stopSimAutoTrend();
+            stopRealtimePolling();
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
             state = JSON.parse(JSON.stringify(DEFAULT_STATE));
             pendingHouseType = state.houseType;
@@ -3244,7 +3635,6 @@
             showPushBanner('Đã đặt lại mặc định', 'Dữ liệu ứng dụng đã khôi phục về trạng thái ban đầu.', '#1B4D3E');
         }
 
-        // Needs & Go-Bag Handlers
         function setReserveDays(days) {
             state.reserveDays = Math.min(30, Math.max(1, parseInt(days) || 7));
             persistState();
@@ -3373,6 +3763,10 @@
             initHueMap();
             refreshAllViews();
             updateNetworkStatus();
+            if (state.dataSourceMode === 'realtime') {
+                startRealtimePolling();
+                fetchHueSRealtimeNow(false);
+            }
             window.addEventListener('online', updateNetworkStatus);
             window.addEventListener('offline', updateNetworkStatus);
         };
