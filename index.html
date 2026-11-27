@@ -1,6 +1,47 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "311a2eaa-46aa-416f-b358-3de29f8019aa",
+      serviceWorkerParam: { scope: "/hue-floodguard/" },
+      serviceWorkerPath: "OneSignalSDKWorker.js",
+      notifyButton: {
+        enable: false // Tắt nút mặc định của OneSignal để dùng nút thiết kế riêng của bạn
+      }
+    });
+  });
+
+  // Hàm gọi khi người dân bấm nút "Bật cảnh báo lũ" trên giao diện
+  async function subscribeFloodAlert() {
+    if (!window.OneSignal) return;
+    
+    // Kiểm tra nếu là iPhone nhưng chưa lưu ra màn hình chính
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    if (isIOS && !isStandalone) {
+      alert("Trên iPhone, bạn cần bấm biểu tượng Chia sẻ (Share) ở dưới cùng -> chọn 'Thêm vào MH chính' (Add to Home Screen), sau đó mở ứng dụng từ màn hình chính để bật còi báo động!");
+      return;
+    }
+
+    // Yêu cầu cấp quyền nhận thông báo đẩy
+    await OneSignal.Notifications.requestPermission();
+    
+    if (OneSignal.Notifications.permission) {
+      alert("✅ Đã đăng ký nhận còi báo động lũ khẩn cấp thành công!");
+      // Có thể gắn tag khu vực của người dùng (ví dụ: Kim Long, Vỹ Dạ, Nguyễn Huệ...)
+      OneSignal.User.addTag("khu_vuc", "hue_trung_tam");
+    }
+  }
+</script>
     <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
     <meta charset="UTF-8">
