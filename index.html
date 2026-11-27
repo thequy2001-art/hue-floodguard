@@ -254,6 +254,9 @@
                     <p id="headerLiveMeta" class="text-[11px] font-semibold text-slate-600 truncate">
                         Kim Long: 0.00m • Hue-S 30p/lần
                     </p>
+                    <span id="networkStatusBadge" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 text-emerald-800 mt-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Trực tuyến
+                    </span>
                 </div>
             </div>
 
@@ -722,11 +725,11 @@
                     <div class="flex items-center gap-2.5 text-xs">
                         <i data-lucide="map-pin" class="w-5 h-5 text-amber-400 animate-bounce flex-shrink-0"></i>
                         <div>
-                            <div class="font-extrabold">Chạm trực tiếp vào vị trí nhà bạn</div>
-                            <div class="text-emerald-200 text-[11px]">Hoặc kéo ghim "Nhà tôi" đến đúng hẻm/số nhà</div>
+                            <div id="pinModeTitle" class="font-extrabold">Chạm trực tiếp vào vị trí nhà bạn</div>
+                            <div id="pinModeSub" class="text-emerald-200 text-[11px]">Hoặc kéo ghim "Nhà tôi" đến đúng hẻm/số nhà</div>
                         </div>
                     </div>
-                    <button onclick="togglePinMode(false)" class="px-3 py-1.5 rounded-xl bg-white/15 text-xs font-bold">Xong</button>
+                    <button onclick="cancelPinSelectMode()" class="px-3 py-1.5 rounded-xl bg-white/15 text-xs font-bold">Hủy</button>
                 </div>
 
                 <div id="mapTopControls" class="absolute top-3 left-3 right-3 z-[950] ios-glass rounded-3xl p-3 shadow-lg border border-white space-y-2">
@@ -741,7 +744,7 @@
 
                     <div class="flex items-center justify-between gap-1.5 text-[11px] font-bold">
                         <button onclick="togglePinMode(true)" class="px-2.5 py-1.5 rounded-xl bg-[#EBF3F0] hover:bg-[#DCE7E2] text-[#1B4D3E] flex items-center gap-1 whitespace-nowrap">
-                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Ghim nhà tôi
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Ghim nhà
                         </button>
                         <button onclick="toggleFloodLayer()" id="btnFloodLayer" class="px-2.5 py-1.5 rounded-xl bg-[#1B4D3E] text-white flex items-center gap-1 whitespace-nowrap">
                             <i data-lucide="layers" class="w-3.5 h-3.5"></i> Vùng ngập
@@ -750,29 +753,52 @@
                             <i data-lucide="locate-fixed" class="w-3.5 h-3.5 text-[#1B4D3E]"></i> GPS
                         </button>
                     </div>
+
+                    <!-- Chọn Điểm đi & Điểm đến linh hoạt -->
+                    <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                        <button onclick="startSelectOrigin()" id="btnSelectOrigin" class="px-2 py-1.5 rounded-xl bg-white border border-slate-200 text-[10.5px] font-extrabold text-slate-700 flex items-center justify-center gap-1">
+                            <i data-lucide="flag" class="w-3.5 h-3.5 text-[#1B4D3E]"></i>
+                            <span id="originBtnLabel">Điểm đi: Nhà tôi</span>
+                        </button>
+                        <button onclick="startSelectDest()" id="btnSelectDest" class="px-2 py-1.5 rounded-xl bg-white border border-slate-200 text-[10.5px] font-extrabold text-slate-700 flex items-center justify-center gap-1">
+                            <i data-lucide="map-pinned" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <span id="destBtnLabel">Điểm đến: Chọn</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="absolute bottom-24 left-3 right-3 z-[950] space-y-2">
-                    <div id="evacRouteCard" class="hidden ios-glass rounded-3xl p-3.5 shadow-xl border border-[#1B4D3E]/25 space-y-2">
+                    <div id="evacRouteCard" class="hidden ios-glass rounded-3xl p-3 shadow-xl border border-[#1B4D3E]/25 space-y-1.5 max-h-[42vh] overflow-y-auto no-scrollbar">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
                                 <span class="w-7 h-7 rounded-xl bg-[#1B4D3E] text-white flex items-center justify-center flex-shrink-0">
                                     <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
                                 </span>
                                 <div class="min-w-0">
-                                    <div class="text-[10px] font-extrabold uppercase text-[#1B4D3E]">Lộ trình sơ tán tránh ngập</div>
+                                    <div class="text-[10px] font-extrabold uppercase text-[#1B4D3E]">Lộ trình sơ tán tránh ngập (Dijkstra)</div>
                                     <div id="evacShelterTitle" class="text-xs font-extrabold text-slate-900 truncate">Trường ĐH Sư phạm - Đại học Huế (34 Lê Lợi)</div>
                                 </div>
                             </div>
-                            <button onclick="clearEvacRoute()" class="p-1 rounded-full bg-slate-200/80 text-slate-600 flex-shrink-0" aria-label="Đóng lộ trình">
-                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                            </button>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <button onclick="hideRouteCard()" class="px-2 py-1 rounded-xl bg-[#EBF3F0] text-[#1B4D3E] text-[10px] font-extrabold flex items-center gap-1" title="Ẩn thẻ để xem rõ đường trên bản đồ">
+                                    <i data-lucide="panel-bottom-close" class="w-3.5 h-3.5"></i>
+                                    <span>Ẩn thẻ</span>
+                                </button>
+                                <button onclick="clearEvacRoute()" class="p-1.5 rounded-full bg-slate-200/80 text-slate-600" aria-label="Xóa hoàn toàn lộ trình">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-1">
-                            <button onclick="selectShelter(0)" class="shelter-btn py-1 px-1.5 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold truncate">ĐH Sư phạm Huế</button>
-                            <button onclick="selectShelter(1)" class="shelter-btn py-1 px-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold truncate">BV Trung ương Huế</button>
-                            <button onclick="selectShelter(2)" class="shelter-btn py-1 px-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold truncate">Đồi Đàn Nam Giao</button>
+                        <div class="text-[10px] font-bold text-slate-500 px-0.5">Chọn điểm đến nhanh (hoặc chạm bản đồ):</div>
+                        <div class="flex gap-1 overflow-x-auto no-scrollbar pb-0.5">
+                            <button onclick="selectShelter(0)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold">ĐH Sư phạm</button>
+                            <button onclick="selectShelter(1)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold">BV TW Huế</button>
+                            <button onclick="selectShelter(2)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold">Nam Giao</button>
+                            <button onclick="selectShelter(3)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold">Cầu Phú Xuân</button>
+                            <button onclick="selectShelter(4)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold">Trường Tiền</button>
+                            <button onclick="selectShelter(5)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold">Vọng Cảnh</button>
+                            <button onclick="selectShelter(6)" class="shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold">An Cựu</button>
                         </div>
 
                         <div id="evacRouteDetails" class="text-[11px] text-slate-700 bg-white/95 rounded-xl p-2.5 border border-slate-200/70 space-y-1"></div>
@@ -786,9 +812,14 @@
                                 <div id="mapHouseCoordsSub" class="text-[10px] font-mono-num text-slate-500 truncate">16.4612°N, 107.5895°E • Đường Nguyễn Huệ</div>
                             </div>
                         </div>
-                        <button onclick="showEvacRoute()" class="px-3 py-2 rounded-xl bg-[#1B4D3E] hover:bg-[#13382D] text-white text-[11px] font-extrabold flex-shrink-0 active:scale-95 transition">
-                            Chỉ đường sơ tán
-                        </button>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <button id="btnBottomToggleRoute" onclick="hideRouteCard()" class="hidden px-2.5 py-2 rounded-xl bg-[#EBF3F0] text-[#1B4D3E] text-[11px] font-extrabold active:scale-95 transition">
+                                Ẩn thẻ
+                            </button>
+                            <button id="btnShowEvacRoute" onclick="showEvacRoute(true)" class="px-3 py-2 rounded-xl bg-[#1B4D3E] hover:bg-[#13382D] text-white text-[11px] font-extrabold active:scale-95 transition">
+                                Chỉ đường sơ tán
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1384,7 +1415,10 @@
         const STORAGE_KEY = 'hue_floodguard_v1_final';
         let map = null;
         let layers = { zones: null, stations: null, hazards: null, shelters: null, house: null, route: null };
-        let isPinMode = false;
+        let isPinMode = false;           // ghim nhà (cũ)
+        let pinSelectMode = null;        // null | 'house' | 'origin' | 'dest'
+        let hasActiveRoute = false;      // đã tính lộ trình (đường xanh vẫn nằm trên bản đồ)
+        let isRouteCardVisible = true;   // thẻ thông tin lộ trình đang mở hay ẩn
         let autoSyncTimer = null;
         let pendingHouseType = '2floor';
 
@@ -1394,6 +1428,17 @@
             { id: 'davien', name: 'Trạm Dã Viên', river: 'Sông Hương', lat: 16.4628, lng: 107.5685, ratio: 0.96, bd1: 1.00, bd2: 2.00, bd3: 3.50 },
             { id: 'phongbinh', name: 'Trạm Phong Bình', river: 'Sông Ô Lâu', lat: 16.6320, lng: 107.4280, ratio: 0.56, bd1: 1.50, bd2: 3.00, bd3: 4.50 }
         ];
+
+        /**
+         * Phân định bờ Bắc / bờ Nam Sông Hương bằng đường phân chia chéo theo hướng chảy
+         * (Tây Nam → Đông Bắc), thay cho ngưỡng vĩ độ cứng 16.474.
+         * Calib: Kim Long (16.459, 107.556) → north; Nguyễn Huệ/Đống Đa (16.461, 107.589) → south.
+         */
+        function getRiverBank(lat, lng) {
+            // Đường tâm sông xấp xỉ: (16.452, 107.540) → (16.482, 107.620)
+            const riverCenterLat = 16.452 + (lng - 107.540) * ((16.482 - 16.452) / (107.620 - 107.540));
+            return lat >= riverCenterLat ? 'north' : 'south';
+        }
 
         const HUE_NEIGHBORHOODS = [
             { name: 'Đường Nguyễn Huệ', address: 'Đường Nguyễn Huệ - Đống Đa, TP. Huế', lat: 16.4612, lng: 107.5895, station: 'kimlong', areaKey: 'noido' },
@@ -1461,13 +1506,41 @@
             { name: 'Vùng ngập Đập Đá - Cồn Hến (>1.80m)', lat: 16.4735, lng: 107.5985, radius: 320, trigger: 1.80 },
             { name: 'Vùng ngập Nguyễn Công Trứ - Bến Nghé', lat: 16.4692, lng: 107.5945, radius: 270, trigger: 3.20 },
             { name: 'Vùng trũng ven sông Kim Long', lat: 16.4590, lng: 107.5560, radius: 300, trigger: 2.50 },
-            { name: 'Vùng trũng Vỹ Dạ - Kênh An Cựu', lat: 16.4680, lng: 107.6020, radius: 340, trigger: 2.50 }
+            { name: 'Vùng trũng Vỹ Dạ - Kênh An Cựu', lat: 16.4680, lng: 107.6020, radius: 340, trigger: 2.50 },
+            { name: 'Vùng trũng Bến Nghé - Đống Đa', lat: 16.4655, lng: 107.5920, radius: 250, trigger: 3.00 },
+            { name: 'Vùng thấp Phú Hậu - Chi Lăng', lat: 16.4840, lng: 107.5965, radius: 280, trigger: 2.80 }
         ];
 
+        // Điểm sơ tán & điểm cao ráo mở rộng (người dùng có thể chọn làm Điểm đến)
         const EVAC_SHELTERS = [
             { short: 'ĐH Sư phạm Huế', name: 'Trường ĐH Sư phạm - Đại học Huế (34 Lê Lợi)', lat: 16.4675, lng: 107.5882 },
             { short: 'BV Trung ương Huế', name: 'Bệnh viện Trung ương Huế (16 Lê Lợi)', lat: 16.4622, lng: 107.5865 },
-            { short: 'Đồi Đàn Nam Giao', name: 'Khu vực cao ráo Đàn Nam Giao - Điện Biên Phủ', lat: 16.4455, lng: 107.5750 }
+            { short: 'Đồi Đàn Nam Giao', name: 'Khu vực cao ráo Đàn Nam Giao - Điện Biên Phủ', lat: 16.4455, lng: 107.5750 },
+            { short: 'Cầu Phú Xuân', name: 'Khu vực cao quanh Cầu Phú Xuân (hướng trung tâm)', lat: 16.4658, lng: 107.5848 },
+            { short: 'Cầu Trường Tiền', name: 'Cầu Trường Tiền & khu vực hai đầu cầu (cao hơn)', lat: 16.4689, lng: 107.5887 },
+            { short: 'Đồi Vọng Cảnh', name: 'Khu vực đồi Vọng Cảnh (cao ráo phía Tây Nam)', lat: 16.4405, lng: 107.5620 },
+            { short: 'Khu vực An Cựu cao', name: 'Khu vực cao An Cựu - Hùng Vương', lat: 16.4550, lng: 107.5955 }
+        ];
+
+        // Các nút giao thông chính / cầu / điểm cao dùng cho thuật toán tìm đường tránh ngập (Dijkstra)
+        // Các điểm này đóng vai trò "nút" trong đồ thị đường đi an toàn
+        const KEY_WAYPOINTS = [
+            { id: 'tt', name: 'Cầu Trường Tiền', lat: 16.4689, lng: 107.5887 },
+            { id: 'px', name: 'Cầu Phú Xuân', lat: 16.4658, lng: 107.5848 },
+            { id: 'dv', name: 'Cầu Dã Viên', lat: 16.4632, lng: 107.5675 },
+            { id: 'bh', name: 'Cầu Bạch Hổ', lat: 16.4545, lng: 107.5805 },
+            { id: 'nguyen_hue', name: 'Ngã tư Nguyễn Huệ - Đống Đa', lat: 16.4612, lng: 107.5895 },
+            { id: 'le_loi', name: 'Lê Lợi - gần BV TW', lat: 16.4635, lng: 107.5870 },
+            { id: 'kim_long_center', name: 'Kim Long trung tâm', lat: 16.4595, lng: 107.5565 },
+            { id: 'vy_da', name: 'Vỹ Dạ - Phạm Văn Đồng', lat: 16.4752, lng: 107.6048 },
+            { id: 'phu_hau', name: 'Phú Hậu - Chi Lăng', lat: 16.4842, lng: 107.5960 },
+            { id: 'dap_da', name: 'Khu vực gần Đập Đá (tránh khi ngập)', lat: 16.4720, lng: 107.5965 },
+            { id: 'nam_giao', name: 'Đàn Nam Giao', lat: 16.4455, lng: 107.5750 },
+            { id: 'su_pham', name: 'ĐH Sư phạm Huế', lat: 16.4675, lng: 107.5882 },
+            { id: 'bv_tw', name: 'BV Trung ương Huế', lat: 16.4622, lng: 107.5865 },
+            { id: 'an_cuu', name: 'An Cựu cao', lat: 16.4550, lng: 107.5955 },
+            { id: 'huong_so', name: 'Hương Sơ - hướng Tây', lat: 16.4700, lng: 107.5600 },
+            { id: 'thuan_an_road', name: 'Hướng đường cao ráo phía Đông', lat: 16.4705, lng: 107.6100 }
         ];
 
         const DEFAULT_SUPPLIES = [
@@ -1496,6 +1569,14 @@
             reserveDays: 7,
             showFloodZones: true,
             selectedShelterIdx: 0,
+            // Routing: origin & destination selection
+            useCustomOrigin: false,
+            customOriginLat: null,
+            customOriginLng: null,
+            useCustomDest: false,
+            customDestLat: null,
+            customDestLng: null,
+            customDestName: '',
             roadAreaKey: 'noido',
             roadCutoffs: JSON.parse(JSON.stringify(AREA_ROAD_PRESETS.noido.roads)),
             completedTasks: {},
@@ -1741,14 +1822,42 @@
             layers.route = L.layerGroup().addTo(map);
 
             map.on('click', (e) => {
-                if (!isPinMode) return;
-                state.lat = +e.latlng.lat.toFixed(6);
-                state.lng = +e.latlng.lng.toFixed(6);
-                state.address = `Vị trí đã ghim (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
-                persistState();
-                togglePinMode(false);
-                refreshAllViews();
-                showPushBanner('Đã cập nhật vị trí ngôi nhà', `Tọa độ mới: ${state.lat}, ${state.lng}`, '#1B4D3E');
+                if (!pinSelectMode) return;
+                const lat = +e.latlng.lat.toFixed(6);
+                const lng = +e.latlng.lng.toFixed(6);
+
+                if (pinSelectMode === 'house') {
+                    state.lat = lat;
+                    state.lng = lng;
+                    state.address = `Vị trí đã ghim (${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E)`;
+                    persistState();
+                    cancelPinSelectMode();
+                    refreshAllViews();
+                    showPushBanner('Đã cập nhật vị trí ngôi nhà', `Tọa độ mới: ${lat}, ${lng}`, '#1B4D3E');
+                } else if (pinSelectMode === 'origin') {
+                    state.useCustomOrigin = true;
+                    state.customOriginLat = lat;
+                    state.customOriginLng = lng;
+                    persistState();
+                    cancelPinSelectMode();
+                    updateOriginDestLabels();
+                    showPushBanner('Đã chọn Điểm đi tùy chỉnh', `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`, '#1B4D3E');
+                    // Tự động tính lại lộ trình nếu đang mở
+                    if (hasActiveRoute) {
+                        showEvacRoute();
+                    }
+                } else if (pinSelectMode === 'dest') {
+                    state.useCustomDest = true;
+                    state.customDestLat = lat;
+                    state.customDestLng = lng;
+                    state.customDestName = `Điểm đến tùy chỉnh (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                    state.selectedShelterIdx = -1;
+                    persistState();
+                    cancelPinSelectMode();
+                    updateOriginDestLabels();
+                    showEvacRoute();
+                    showPushBanner('Đã chọn Điểm đến tùy chỉnh', state.customDestName, '#16A34A');
+                }
             });
 
             const mapEl = document.getElementById('hueGisMap');
@@ -1788,8 +1897,10 @@
 
             (state.roadCutoffs || []).forEach((road, idx) => {
                 if (activeStLvl >= road.trigger) {
-                    const rLat = road.lat || (state.lat + 0.0018 * (idx + 1));
-                    const rLng = road.lng || (state.lng + 0.0015 * (idx % 2 === 0 ? 1 : -1));
+                    // Chỉ vẽ biển báo đỏ khi điểm ngập đã có tọa độ thật (tránh vẽ cạnh nhà)
+                    if (!Number.isFinite(+road.lat) || !Number.isFinite(+road.lng)) return;
+                    const rLat = +road.lat;
+                    const rLng = +road.lng;
                     const warnHtml = `
                         <div class="flex flex-col items-center -translate-x-1/2 -translate-y-full">
                             <div class="px-2 py-0.5 rounded-lg bg-red-600 text-white text-[9.5px] font-extrabold whitespace-nowrap shadow-md border border-white">
@@ -1864,7 +1975,7 @@
                 state.address = `Vị trí kéo ghim (${state.lat.toFixed(4)}°N, ${state.lng.toFixed(4)}°E)`;
                 persistState();
                 refreshAllViews();
-                if (!document.getElementById('evacRouteCard').classList.contains('hidden')) {
+                if (hasActiveRoute) {
                     showEvacRoute();
                 }
             });
@@ -1896,9 +2007,71 @@
         }
 
         function togglePinMode(enable) {
-            isPinMode = enable;
-            document.getElementById('pinModeBanner').classList.toggle('hidden', !enable);
-            document.getElementById('mapTopControls').classList.toggle('hidden', enable);
+            if (enable) {
+                pinSelectMode = 'house';
+                isPinMode = true;
+                document.getElementById('pinModeTitle').textContent = 'Chạm trực tiếp vào vị trí nhà bạn';
+                document.getElementById('pinModeSub').textContent = 'Hoặc kéo ghim "Nhà tôi" đến đúng hẻm/số nhà';
+                document.getElementById('pinModeBanner').classList.remove('hidden');
+                document.getElementById('mapTopControls').classList.add('hidden');
+            } else {
+                cancelPinSelectMode();
+            }
+        }
+
+        function cancelPinSelectMode() {
+            pinSelectMode = null;
+            isPinMode = false;
+            document.getElementById('pinModeBanner').classList.add('hidden');
+            document.getElementById('mapTopControls').classList.remove('hidden');
+        }
+
+        function startSelectOrigin() {
+            // Nếu đã có custom thì cho phép reset về nhà
+            if (state.useCustomOrigin) {
+                state.useCustomOrigin = false;
+                state.customOriginLat = null;
+                state.customOriginLng = null;
+                persistState();
+                updateOriginDestLabels();
+                showPushBanner('Đã đặt lại Điểm đi = Nhà tôi', 'Sử dụng vị trí ngôi nhà hiện tại làm điểm xuất phát.', '#1B4D3E');
+                if (hasActiveRoute) showEvacRoute();
+                return;
+            }
+            pinSelectMode = 'origin';
+            document.getElementById('pinModeTitle').textContent = 'Chạm bản đồ để chọn Điểm đi';
+            document.getElementById('pinModeSub').textContent = 'Điểm xuất phát cho lộ trình sơ tán (có thể khác nhà)';
+            document.getElementById('pinModeBanner').classList.remove('hidden');
+            document.getElementById('mapTopControls').classList.add('hidden');
+            showPushBanner('Chế độ chọn Điểm đi', 'Chạm lên bản đồ để đặt điểm xuất phát.', '#1B4D3E');
+        }
+
+        function startSelectDest() {
+            pinSelectMode = 'dest';
+            document.getElementById('pinModeTitle').textContent = 'Chạm bản đồ để chọn Điểm đến';
+            document.getElementById('pinModeSub').textContent = 'Hoặc dùng các nút điểm sơ tán / điểm cao ráo bên dưới';
+            document.getElementById('pinModeBanner').classList.remove('hidden');
+            document.getElementById('mapTopControls').classList.add('hidden');
+            showPushBanner('Chế độ chọn Điểm đến', 'Chạm bản đồ hoặc chọn nhanh từ danh sách điểm sơ tán.', '#16A34A');
+        }
+
+        function updateOriginDestLabels() {
+            const originLabel = document.getElementById('originBtnLabel');
+            const destLabel = document.getElementById('destBtnLabel');
+            if (originLabel) {
+                originLabel.textContent = state.useCustomOrigin
+                    ? `Điểm đi: Tùy chỉnh`
+                    : 'Điểm đi: Nhà tôi';
+            }
+            if (destLabel) {
+                if (state.useCustomDest) {
+                    destLabel.textContent = 'Điểm đến: Tùy chỉnh';
+                } else if (state.selectedShelterIdx >= 0 && EVAC_SHELTERS[state.selectedShelterIdx]) {
+                    destLabel.textContent = `Đến: ${EVAC_SHELTERS[state.selectedShelterIdx].short}`;
+                } else {
+                    destLabel.textContent = 'Điểm đến: Chọn';
+                }
+            }
         }
 
         function toggleFloodLayer() {
@@ -1936,59 +2109,350 @@
 
         function selectShelter(idx) {
             state.selectedShelterIdx = idx;
+            state.useCustomDest = false;
+            state.customDestLat = null;
+            state.customDestLng = null;
+            state.customDestName = '';
+            persistState();
             document.querySelectorAll('.shelter-btn').forEach((btn, i) => {
                 btn.className = i === idx
-                    ? 'shelter-btn py-1 px-1.5 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold truncate'
-                    : 'shelter-btn py-1 px-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold truncate';
+                    ? 'shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-[#1B4D3E] text-white text-[10px] font-bold'
+                    : 'shelter-btn flex-shrink-0 py-1 px-2 rounded-xl bg-white text-slate-700 border border-slate-200 text-[10px] font-bold';
             });
+            updateOriginDestLabels();
             showEvacRoute();
         }
 
-        function showEvacRoute() {
-            if (!map) return;
-            layers.route.clearLayers();
-            const shelter = EVAC_SHELTERS[state.selectedShelterIdx] || EVAC_SHELTERS[0];
-            document.getElementById('evacShelterTitle').textContent = shelter.name;
-
-            const midLat = (state.lat + shelter.lat) / 2 + 0.0012;
-            const midLng = (state.lng + shelter.lng) / 2 - 0.0012;
-            const waypoints = [
-                [state.lat, state.lng],
-                [midLat, midLng],
-                [shelter.lat, shelter.lng]
-            ];
-
-            L.polyline(waypoints, {
-                color: '#16A34A',
-                weight: 5,
-                opacity: 0.92,
-                dashArray: '8 6'
-            }).addTo(layers.route);
-
-            const dLat = (shelter.lat - state.lat) * 111;
-            const dLng = (shelter.lng - state.lng) * 106;
-            const distKm = Math.max(0.3, Math.sqrt(dLat * dLat + dLng * dLng) * 1.18).toFixed(1);
-            const driveMins = Math.max(2, Math.round((distKm / 20) * 60));
-            const walkMins = Math.max(4, Math.round((distKm / 4.5) * 60));
-
-            const firstRoad = getMinRoadCutoff();
-            const roadCutoffWarning = state.houseType === '1floor'
-                ? `<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Cần di chuyển SỚM trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) chia cắt!</div>`
-                : `<div>• Tuyến ưu tiên trục đường cao ráo, tránh ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m).</div>`;
-
-            document.getElementById('evacRouteDetails').innerHTML = `
-                <div class="font-extrabold text-[#16A34A]">Quãng đường: ${distKm} km • Đi xe ~${driveMins} phút (Đi bộ ~${walkMins} phút)</div>
-                ${roadCutoffWarning}
-            `;
-
-            document.getElementById('evacRouteCard').classList.remove('hidden');
-            renderGisLayers();
-            map.fitBounds(L.latLngBounds(waypoints), { padding: [90, 120] });
+        // ========== THUẬT TOÁN TÌM ĐƯỜNG NGẮN NHẤT TRÁNH NGẬP (Dijkstra trên đồ thị điểm nút) ==========
+        function haversineKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
+        function getActiveFloodObstacles() {
+            const obstacles = [];
+            const st = getActiveStation();
+            const stLvl = getStationLevel(st);
+
+            // Road cutoffs đã kích hoạt — chỉ dùng làm vật cản khi đã có tọa độ thật
+            (state.roadCutoffs || []).forEach(r => {
+                if (stLvl >= r.trigger && Number.isFinite(+r.lat) && Number.isFinite(+r.lng)) {
+                    obstacles.push({
+                        lat: +r.lat,
+                        lng: +r.lng,
+                        radiusM: 180 + Math.min(120, (stLvl - r.trigger) * 80),
+                        title: r.title
+                    });
+                }
+            });
+
+            // Flood risk zones
+            FLOOD_RISK_ZONES.forEach(z => {
+                if (state.kimLongLevel >= z.trigger) {
+                    obstacles.push({
+                        lat: z.lat,
+                        lng: z.lng,
+                        radiusM: z.radius + (state.kimLongLevel - z.trigger) * 100,
+                        title: z.name
+                    });
+                }
+            });
+            return obstacles;
+        }
+
+        function isSegmentBlocked(lat1, lng1, lat2, lng2, obstacles) {
+            if (!obstacles || obstacles.length === 0) return false;
+            // Sample 8 points along the segment
+            for (let i = 0; i <= 8; i++) {
+                const t = i / 8;
+                const lat = lat1 + (lat2 - lat1) * t;
+                const lng = lng1 + (lng2 - lng1) * t;
+                for (const obs of obstacles) {
+                    const distM = haversineKm(lat, lng, obs.lat, obs.lng) * 1000;
+                    if (distM < obs.radiusM + 40) { // buffer 40m
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function getOriginCoords() {
+            if (state.useCustomOrigin && state.customOriginLat != null) {
+                return { lat: state.customOriginLat, lng: state.customOriginLng, name: 'Điểm đi tùy chỉnh' };
+            }
+            return { lat: state.lat, lng: state.lng, name: 'Nhà tôi' };
+        }
+
+        function getDestCoords() {
+            if (state.useCustomDest && state.customDestLat != null) {
+                return { lat: state.customDestLat, lng: state.customDestLng, name: state.customDestName || 'Điểm đến tùy chỉnh' };
+            }
+            const sh = EVAC_SHELTERS[state.selectedShelterIdx] || EVAC_SHELTERS[0];
+            return { lat: sh.lat, lng: sh.lng, name: sh.name };
+        }
+
+        function findShortestSafePath(origin, dest, obstacles) {
+            // Nodes: origin + dest + KEY_WAYPOINTS
+            const nodes = [
+                { id: 'ORIGIN', lat: origin.lat, lng: origin.lng, name: origin.name },
+                { id: 'DEST', lat: dest.lat, lng: dest.lng, name: dest.name }
+            ];
+            KEY_WAYPOINTS.forEach(wp => {
+                nodes.push({ id: wp.id, lat: wp.lat, lng: wp.lng, name: wp.name });
+            });
+
+            // Build adjacency (undirected) — chỉ nối nếu khoảng cách hợp lý và không bị chặn bởi vùng ngập
+            const MAX_EDGE_KM = 2.8;
+            const graph = {};
+            nodes.forEach(n => { graph[n.id] = []; });
+
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const a = nodes[i], b = nodes[j];
+                    const d = haversineKm(a.lat, a.lng, b.lat, b.lng);
+                    if (d > MAX_EDGE_KM || d < 0.01) continue;
+                    if (isSegmentBlocked(a.lat, a.lng, b.lat, b.lng, obstacles)) continue;
+                    graph[a.id].push({ to: b.id, dist: d });
+                    graph[b.id].push({ to: a.id, dist: d });
+                }
+            }
+
+            // Dijkstra
+            const dist = {};
+            const prev = {};
+            const visited = new Set();
+            nodes.forEach(n => { dist[n.id] = Infinity; prev[n.id] = null; });
+            dist['ORIGIN'] = 0;
+
+            while (true) {
+                let u = null, best = Infinity;
+                for (const n of nodes) {
+                    if (!visited.has(n.id) && dist[n.id] < best) {
+                        best = dist[n.id];
+                        u = n.id;
+                    }
+                }
+                if (u === null || u === 'DEST') break;
+                visited.add(u);
+                for (const edge of (graph[u] || [])) {
+                    if (visited.has(edge.to)) continue;
+                    const alt = dist[u] + edge.dist;
+                    if (alt < dist[edge.to]) {
+                        dist[edge.to] = alt;
+                        prev[edge.to] = u;
+                    }
+                }
+            }
+
+            if (dist['DEST'] === Infinity) {
+                // Không tìm được đường an toàn → fallback: đường thẳng + cảnh báo
+                return {
+                    path: [[origin.lat, origin.lng], [dest.lat, dest.lng]],
+                    totalKm: haversineKm(origin.lat, origin.lng, dest.lat, dest.lng),
+                    viaNames: [],
+                    blocked: true
+                };
+            }
+
+            // Reconstruct path
+            const pathIds = [];
+            let cur = 'DEST';
+            while (cur) {
+                pathIds.push(cur);
+                cur = prev[cur];
+            }
+            pathIds.reverse();
+
+            const idToNode = {};
+            nodes.forEach(n => { idToNode[n.id] = n; });
+            const path = pathIds.map(id => [idToNode[id].lat, idToNode[id].lng]);
+            const viaNames = pathIds
+                .filter(id => id !== 'ORIGIN' && id !== 'DEST')
+                .map(id => idToNode[id].name);
+
+            return {
+                path,
+                totalKm: dist['DEST'],
+                viaNames,
+                blocked: false
+            };
+        }
+
+        function showEvacRoute(forceShowCard) {
+            if (!map) return;
+            // Tắt chế độ chọn điểm nếu đang bật
+            if (pinSelectMode) cancelPinSelectMode();
+
+            // forceShowCard = true khi user bấm "Xem lại thẻ" → chỉ mở thẻ, không bắt buộc tính lại
+            // Khi thay đổi mực nước / kéo ghim: vẫn tính lại đường, giữ nguyên trạng thái ẩn/hiện thẻ
+            if (forceShowCard === true && hasActiveRoute && !isRouteCardVisible) {
+                document.getElementById('evacRouteCard').classList.remove('hidden');
+                isRouteCardVisible = true;
+                updateRouteCardUI();
+                if (layers.route && !map.hasLayer(layers.route)) {
+                    layers.route.addTo(map);
+                }
+                safeLucide();
+                return;
+            }
+
+            layers.route.clearLayers();
+
+            const origin = getOriginCoords();
+            const dest = getDestCoords();
+            document.getElementById('evacShelterTitle').textContent = dest.name;
+
+            const obstacles = getActiveFloodObstacles();
+            const result = findShortestSafePath(origin, dest, obstacles);
+
+            // Tạo pane riêng có z-index cao để đường đi luôn nổi trên marker & tile
+            if (!map.getPane('routePane')) {
+                map.createPane('routePane');
+                map.getPane('routePane').style.zIndex = 650; // cao hơn overlay (400) nhưng dưới popup
+            }
+
+            // Viền trắng dày phía dưới để đường nổi bật trên mọi nền bản đồ
+            L.polyline(result.path, {
+                color: '#FFFFFF',
+                weight: 12,
+                opacity: 0.9,
+                lineCap: 'round',
+                lineJoin: 'round',
+                pane: 'routePane'
+            }).addTo(layers.route);
+
+            // Đường chính màu xanh lá / cam, liền mạch, dày
+            const poly = L.polyline(result.path, {
+                color: result.blocked ? '#EA580C' : '#16A34A',
+                weight: 7,
+                opacity: 1,
+                lineCap: 'round',
+                lineJoin: 'round',
+                pane: 'routePane'
+            }).addTo(layers.route);
+
+            // Marker điểm đi & điểm đến (rõ ràng hơn)
+            const startIcon = L.divIcon({
+                html: `<div style="background:#1B4D3E;color:white;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">🚩 ĐI</div>`,
+                iconSize: [0, 0], className: ''
+            });
+            const endIcon = L.divIcon({
+                html: `<div style="background:#16A34A;color:white;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">🏁 ĐẾN</div>`,
+                iconSize: [0, 0], className: ''
+            });
+            L.marker([origin.lat, origin.lng], { icon: startIcon }).addTo(layers.route);
+            L.marker([dest.lat, dest.lng], { icon: endIcon }).addTo(layers.route);
+
+            // Đảm bảo layer route đang được gắn vào bản đồ (sau khi có thể đã bị remove khi ẩn)
+            if (map && !map.hasLayer(layers.route)) {
+                layers.route.addTo(map);
+            }
+
+            const distKm = Math.max(0.2, result.totalKm).toFixed(1);
+            const driveMins = Math.max(2, Math.round((result.totalKm / 18) * 60));
+            const walkMins = Math.max(4, Math.round((result.totalKm / 4.2) * 60));
+
+            const firstRoad = getMinRoadCutoff();
+            let viaText = '';
+            if (result.viaNames.length > 0) {
+                viaText = `<div class="text-[10.5px] text-slate-600">• Đi qua: ${result.viaNames.slice(0, 4).join(' → ')}${result.viaNames.length > 4 ? '…' : ''}</div>`;
+            }
+
+            let statusHtml = '';
+            if (result.blocked) {
+                statusHtml = `<div class="text-orange-700 font-extrabold">⚠ Không tìm được tuyến hoàn toàn tránh ngập. Đường thẳng gần nhất (cẩn thận).</div>`;
+            } else if (obstacles.length > 0) {
+                statusHtml = `<div class="text-emerald-700 font-extrabold">✓ Tuyến đã tự động né ${obstacles.length} vùng/điểm ngập đang kích hoạt.</div>`;
+            } else {
+                statusHtml = `<div class="text-slate-600">• Hiện chưa có vùng ngập kích hoạt — tuyến tối ưu theo khoảng cách.</div>`;
+            }
+
+            const houseWarn = state.houseType === '1floor'
+                ? `<div class="text-red-700 font-extrabold">• Nhà 1 tầng: Di chuyển SỚM trước khi ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) chia cắt!</div>`
+                : `<div>• Ưu tiên trục đường cao ráo, tránh ${firstRoad.title} (${firstRoad.trigger.toFixed(2)}m) khi có thể.</div>`;
+
+            document.getElementById('evacRouteDetails').innerHTML = `
+                <div class="font-extrabold text-[#16A34A]">Quãng đường: ${distKm} km • Xe ~${driveMins} phút • Bộ ~${walkMins} phút</div>
+                ${statusHtml}
+                ${viaText}
+                ${houseWarn}
+            `;
+
+            hasActiveRoute = true;
+            // Chỉ mở thẻ nếu trước đó đang hiện (hoặc lần đầu tính); giữ ẩn nếu user đã bấm Ẩn thẻ
+            if (isRouteCardVisible) {
+                document.getElementById('evacRouteCard').classList.remove('hidden');
+            } else {
+                document.getElementById('evacRouteCard').classList.add('hidden');
+            }
+
+            // Đảm bảo đường xanh luôn nằm trên bản đồ
+            if (map && layers.route && !map.hasLayer(layers.route)) {
+                layers.route.addTo(map);
+            }
+
+            updateRouteCardUI();
+            updateOriginDestLabels();
+            renderGisLayers();
+            try {
+                map.fitBounds(L.latLngBounds(result.path), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 160] });
+            } catch (e) {}
+            safeLucide();
+        }
+
+        // Cập nhật nút "Ẩn thẻ" / "Xem lại thẻ"
+        function updateRouteCardUI() {
+            const bottomBtn = document.getElementById('btnBottomToggleRoute');
+            const showBtn = document.getElementById('btnShowEvacRoute');
+
+            if (bottomBtn) {
+                if (hasActiveRoute && isRouteCardVisible) {
+                    bottomBtn.classList.remove('hidden');
+                    bottomBtn.textContent = 'Ẩn thẻ';
+                } else {
+                    bottomBtn.classList.add('hidden');
+                }
+            }
+            if (showBtn) {
+                if (hasActiveRoute && !isRouteCardVisible) {
+                    showBtn.textContent = 'Xem lại thẻ';
+                    showBtn.classList.remove('hidden');
+                } else if (hasActiveRoute && isRouteCardVisible) {
+                    showBtn.textContent = 'Chỉ đường sơ tán';
+                } else {
+                    showBtn.textContent = 'Chỉ đường sơ tán';
+                }
+            }
+            safeLucide();
+        }
+
+        // Ẩn thẻ thông tin — GIỮ NGUYÊN đường xanh trên bản đồ (như Google Maps)
+        function hideRouteCard() {
+            if (!hasActiveRoute) return;
+            document.getElementById('evacRouteCard').classList.add('hidden');
+            isRouteCardVisible = false;
+            updateRouteCardUI();
+            showPushBanner(
+                'Đã ẩn thẻ lộ trình',
+                'Đường màu xanh vẫn còn trên bản đồ. Bấm "Xem lại thẻ" nếu cần xem lại thông tin.',
+                '#1B4D3E'
+            );
+        }
+
+        // Xóa hoàn toàn lộ trình (đường + thẻ)
         function clearEvacRoute() {
             if (layers.route) layers.route.clearLayers();
             document.getElementById('evacRouteCard').classList.add('hidden');
+            hasActiveRoute = false;
+            isRouteCardVisible = true;
+            updateRouteCardUI();
+            showPushBanner('Đã xóa lộ trình', 'Đường đi và thẻ thông tin đã được gỡ khỏi bản đồ.', '#1B4D3E');
         }
 
         // =====================================================================
@@ -2303,6 +2767,7 @@
             document.getElementById('cfgYardLevel').value = state.yardLevel.toFixed(2);
             document.getElementById('cfgAutoAlert').checked = state.autoAlert;
 
+            updateOriginDestLabels();
             renderGisLayers();
             safeLucide();
         }
@@ -2599,6 +3064,10 @@
             if (next === 0) state.risingSpeedCmHr = 0;
             persistState();
             refreshAllViews();
+            // Cập nhật lại lộ trình nếu đang có đường xanh (kể cả khi đã Ẩn thẻ)
+            if (hasActiveRoute) {
+                showEvacRoute();
+            }
             const nextFlood = evaluateHouseholdFlood().key;
 
             const shouldAlarm = state.houseType === '1floor'
@@ -2616,6 +3085,9 @@
             state.risingSpeedCmHr = speedCmHr;
             persistState();
             refreshAllViews();
+            if (hasActiveRoute) {
+                showEvacRoute();
+            }
             const flood = evaluateHouseholdFlood();
             const shouldAlarm = state.houseType === '1floor'
                 ? (flood.key === 'yard' || flood.key === 'doorstep' || flood.key === 'flooded')
@@ -2884,9 +3356,25 @@
         function openAboutModal() { document.getElementById('aboutModal').classList.remove('hidden'); safeLucide(); }
         function closeAboutModal() { document.getElementById('aboutModal').classList.add('hidden'); }
 
+        function updateNetworkStatus() {
+            const badge = document.getElementById('networkStatusBadge');
+            if (!badge) return;
+            const online = navigator.onLine;
+            if (online) {
+                badge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 text-emerald-800 mt-0.5';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Trực tuyến';
+            } else {
+                badge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-amber-100 text-amber-800 mt-0.5';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Offline';
+            }
+        }
+
         window.onload = function () {
             initHueMap();
             refreshAllViews();
+            updateNetworkStatus();
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
         };
     </script>
 </body>
